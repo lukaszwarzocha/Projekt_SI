@@ -31,21 +31,19 @@ class PowerUp(pygame.sprite.Sprite):
         if pygame.time.get_ticks() - self.spawn_time > 15000:
             self.kill()
 
-def _find_maps(folder):
-    #Szukamy map względem lokalizacji tego pliku a nie katalogu roboczego
-    base = os.path.dirname(os.path.abspath(__file__))
-    maps = glob.glob(os.path.join(base, folder, "map*.txt"))
-    if not maps:
-        raise FileNotFoundError(
-            f"Brak map w folderze '{folder}'. Szukano w: {os.path.join(base, folder)}"
-        )
-    return maps
-
 def get_random_map():
-    return random.choice(_find_maps("Maps"))
+    maps = glob.glob("Maps/map*.txt")
+    if not maps:
+        return "Maps/map1.txt"
+    return random.choice(maps)
+
 
 def get_random_map_cp():
-    return random.choice(_find_maps("Maps2"))
+    maps = glob.glob("Maps2/map*.txt")
+    if not maps:
+        return "Maps2/map1.txt"
+    return random.choice(maps)
+
 
 def draw_text(screen, text, font, x, y, color=(255, 255, 255)):
     img = font.render(text, True, color)
@@ -134,8 +132,7 @@ def opposite_side_spawn(sector_idx, all_walls, existing_tanks):
     return 760, 300
 
 
-def handle_combat(player, enemies, player_bullets, enemy_bullets,
-                  dest_walls, indest_walls, all_walls):
+def handle_combat(player, enemies, player_bullets, enemy_bullets, dest_walls, indest_walls, all_walls):
     #Pociski są niszczone gdy trafią w ścianę (zniszczalna ściana też ginie)
     pygame.sprite.groupcollide(player_bullets, indest_walls, True, False)
     pygame.sprite.groupcollide(enemy_bullets,  indest_walls, True, False)
