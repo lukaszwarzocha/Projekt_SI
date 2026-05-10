@@ -115,12 +115,11 @@ class EnemyTank(Tank):
         self.speed        = 2
         self._timer       = random.randint(0, self.THINK_EVERY - 1)  #losowy start
         self._move_dir    = random.choice(DIRS)
-        self._stuck_timer = 0   #licznik klatek bez ruchu
+        self._stuck_timer = 0
         self._last_pos    = (x, y)
-        self.reload_time += random.randint(-150, 150)  #różny czas przeładowania dla każdego bota
+        self.reload_time += random.randint(-150, 150)  #różny czas przeładowania
 
-    def update_ai(self, player_rect, player_bullets, all_walls, dest_walls,
-                  enemy_bullets, indest_walls=None):
+    def update_ai(self, player_rect, all_walls, dest_walls, enemy_bullets):
         old_pos = self.rect.copy()
 
         #Budujemy zbiory kafelków dla obu typów ścian

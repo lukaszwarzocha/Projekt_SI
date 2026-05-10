@@ -82,8 +82,7 @@ def get_safe_spawn_point(all_walls, existing_tanks):
         if (not any(w.rect.colliderect(temp) for w in all_walls)
                 and not any(t.rect.colliderect(temp) for t in existing_tanks)):
             return rx, ry
-    return 700, 300  # fallback gdy nie znaleziono wolnego miejsca
-
+    return 700, 300
 
 #Mapa 800x600 podzielona na siatkę 3x3 (9 sektorów)
 COL_W = SCREEN_WIDTH  // 3
@@ -271,11 +270,11 @@ def run_capture_point(screen, clock):
     current_sector = 4
     capture_rect   = sector_to_rect(4)
 
-    player      = Tank(60, 60, (34, 139, 34))
-    enemies     = pygame.sprite.Group()
-    p_bullets   = pygame.sprite.Group()
-    e_bullets   = pygame.sprite.Group()
-    powerups    = pygame.sprite.Group()
+    player = Tank(60, 60, (34, 139, 34))
+    enemies = pygame.sprite.Group()
+    p_bullets = pygame.sprite.Group()
+    e_bullets = pygame.sprite.Group()
+    powerups = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group(all_walls, player)
 
     #Pierwszy wróg pojawia się od razu po przeciwnej stronie niż punkt
@@ -284,15 +283,15 @@ def run_capture_point(screen, clock):
     enemies.add(first_enemy)
     all_sprites.add(first_enemy)
 
-    progress      = 0.0
+    progress = 0.0
     capture_speed = 0.04
 
     #Śledzimy które progi zmiany sektora i spawnu już zostały użyte
     used_sector_thresholds = set()
-    spawned_at_pcts        = set()
+    spawned_at_pcts = set()
 
-    total_time    = 170 * 1000
-    start_ticks   = pygame.time.get_ticks()
+    total_time = 170 * 1000
+    start_ticks = pygame.time.get_ticks()
     last_pu_spawn = pygame.time.get_ticks()
 
     game_over = False
@@ -316,9 +315,9 @@ def run_capture_point(screen, clock):
                 sect_thresh = int(progress / 25) * 25
                 if sect_thresh != 0 and sect_thresh not in used_sector_thresholds:
                     used_sector_thresholds.add(sect_thresh)
-                    other_sectors  = [i for i in range(9) if i != current_sector]
+                    other_sectors = [i for i in range(9) if i != current_sector]
                     current_sector = random.choice(other_sectors)
-                    capture_rect   = sector_to_rect(current_sector)
+                    capture_rect = sector_to_rect(current_sector)
                     sector_announce_timer = 120
 
                     #Przy każdej zmianie sektora spawnujemy nowego wroga
@@ -337,8 +336,8 @@ def run_capture_point(screen, clock):
                     enemies.add(new_e)
                     all_sprites.add(new_e)
 
-            #Power-up pojawia się co 10 sekund
-            if now - last_pu_spawn > 10000:
+            #Power-up pojawia się co 5 sekund
+            if now - last_pu_spawn > 5000:
                 spawn_powerup(powerups, all_walls)
                 last_pu_spawn = now
 
@@ -399,23 +398,22 @@ def run_capture_point(screen, clock):
             e_bullets.update()
             powerups.update()
 
-            status = handle_combat(player, enemies, p_bullets, e_bullets,
-                                   d_walls, i_walls, all_walls)
+            status = handle_combat(player, enemies, p_bullets, e_bullets, d_walls, i_walls, all_walls)
 
             if status == "DEAD":
-                game_over, res_txt, res_col = True, "ZNISZCZONY!",         (255, 0, 0)
+                game_over, res_txt, res_col = True, "ZNISZCZONY!", (255, 0, 0)
             elif progress >= 100:
-                game_over, res_txt, res_col = True, "PUNKT ZDOBYTY!",      (0, 255, 0)
+                game_over, res_txt, res_col = True, "PUNKT ZDOBYTY!", (0, 255, 0)
             elif progress <= -100:
                 game_over, res_txt, res_col = True, "WRÓG PRZEJĄŁ PUNKT!", (255, 0, 0)
             elif time_left <= 0:
-                game_over, res_txt, res_col = True, "KONIEC CZASU!",       (255, 165, 0)
+                game_over, res_txt, res_col = True, "KONIEC CZASU!", (255, 165, 0)
 
         #Kolor ramki i komunikat zależą od tego kto przejmuje punkt
         if progress > 0:
-            p_col, msg = (0, 255, 0),     f"PRZEJMOWANIE: {int(progress)}%"
+            p_col, msg = (0, 255, 0), f"PRZEJMOWANIE: {int(progress)}%"
         elif progress < 0:
-            p_col, msg = (255, 0, 0),     f"WRÓG PRZEJMUJE: {abs(int(progress))}%"
+            p_col, msg = (255, 0, 0), f"WRÓG PRZEJMUJE: {abs(int(progress))}%"
         else:
             p_col, msg = (150, 150, 150), "PUNKT NEUTRALNY"
 
@@ -445,7 +443,7 @@ def run_capture_point(screen, clock):
 
         m, s = divmod(time_left // 1000, 60)
         draw_text(screen, f"CZAS: {m:02d}:{s:02d}", FONT_MID,   400, 30)
-        draw_text(screen, msg,                       FONT_SMALL, 400, 75, p_col)
+        draw_text(screen, msg, FONT_SMALL, 400, 75, p_col)
 
         #Napis pojawia się gdy punkt zmienia lokalizację
         if sector_announce_timer > 0:
@@ -454,7 +452,7 @@ def run_capture_point(screen, clock):
             screen.blit(ann_surf, ann_surf.get_rect(center=(400, 120)))
 
         if game_over:
-            draw_text(screen, res_txt,              FONT_BIG,   400, 300, res_col)
+            draw_text(screen, res_txt, FONT_BIG, 400, 300, res_col)
             draw_text(screen, "R - POWRÓT DO MENU", FONT_SMALL, 400, 380)
 
         pygame.display.flip()
@@ -493,8 +491,7 @@ def main():
             slider_rect = pygame.Rect(250, 450, 300, 10)
             pygame.draw.rect(screen, (100, 100, 100), slider_rect)
             handle_x = slider_rect.left + (enemy_count - 1) * (slider_rect.width // 2)
-            pygame.draw.rect(screen, (200, 200, 200),
-                             (handle_x - 10, slider_rect.centery - 15, 20, 30))
+            pygame.draw.rect(screen, (200, 200, 200), (handle_x - 10, slider_rect.centery - 15, 20, 30))
             draw_text(screen, "ENTER - START, ESC - POWRÓT", FONT_SMALL, 400, 520)
 
             for event in pygame.event.get():

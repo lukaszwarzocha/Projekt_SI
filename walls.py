@@ -3,10 +3,11 @@ import pygame
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y, color, destructible):
         super().__init__()
-        #Każda ściana to kwadrat 40x40 pikseli (jeden kafelek mapy)
+        #Każda ściana to kwadrat 40x40 pikseli
         self.image = pygame.Surface((40, 40))
         self.image.fill(color)
         self.rect = self.image.get_rect(topleft=(x, y))
+
         #Flaga informuje system kolizji czy pocisk może zniszczyć tę ścianę
         self.destructible = destructible
 

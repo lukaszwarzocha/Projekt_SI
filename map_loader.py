@@ -3,8 +3,8 @@ from walls import DestructibleWall, IndestructibleWall
 
 def load_map(filename, tile_size=40):
     #Tworzymy trzy grupy: wszystkie ściany, tylko zniszczalne, tylko niezniszczalne
-    walls        = pygame.sprite.Group()
-    dest_walls   = pygame.sprite.Group()
+    walls = pygame.sprite.Group()
+    dest_walls = pygame.sprite.Group()
     indest_walls = pygame.sprite.Group()
 
     try:
@@ -21,7 +21,7 @@ def load_map(filename, tile_size=40):
                         indest_walls.add(w)
                         walls.add(w)
                     elif char == 'X':
-                        #Zniszczalna ściana brązowa => można ją zniszczyć
+                        #Zniszczalna ściana brązowa
                         w = DestructibleWall(x, y)
                         dest_walls.add(w)
                         walls.add(w)

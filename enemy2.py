@@ -264,10 +264,10 @@ class EnemyTankCP(Tank):
     def wall_in_front(self, dest_walls, check_dist=15):
         #Tworzymy prostokąt przed lufą i sprawdzamy czy koliduje ze zniszczalną ścianą
         d = self.direction
-        if d==(0,-1): r=pygame.Rect(self.rect.centerx-5, self.rect.top-check_dist,   10,        check_dist)
-        elif d==(0,1):r=pygame.Rect(self.rect.centerx-5, self.rect.bottom,           10,        check_dist)
+        if d==(0,-1): r=pygame.Rect(self.rect.centerx-5, self.rect.top-check_dist, 10, check_dist)
+        elif d==(0,1):r=pygame.Rect(self.rect.centerx-5, self.rect.bottom, 10, check_dist)
         elif d==(-1,0):r=pygame.Rect(self.rect.left-check_dist, self.rect.centery-5, check_dist,10)
-        elif d==(1, 0):r=pygame.Rect(self.rect.right,    self.rect.centery-5,        check_dist,10)
+        elif d==(1, 0):r=pygame.Rect(self.rect.right, self.rect.centery-5, check_dist,10)
         else: return False
         return any(w.rect.colliderect(r) for w in dest_walls)
 
@@ -287,12 +287,13 @@ class EnemyTankCP(Tank):
         def h(a, b):
             return abs(a[0]-b[0]) + abs(a[1]-b[1])  # heurystyka Manhattan
 
-        queue       = [(0, start)]
-        came_from   = {start: None}
+        queue = [(0, start)]
+        came_from = {start: None}
         cost_so_far = {start: 0}
 
         while queue:
             _, curr = heapq.heappop(queue)
+
             if curr == goal:
                 break
             for d in [(0,1),(0,-1),(1,0),(-1,0)]:
@@ -303,6 +304,7 @@ class EnemyTankCP(Tank):
                     continue  #niezniszczalna ściana pomijamy
                 step     = 6 if nxt in dest_walls_coords else 1
                 new_cost = cost_so_far[curr] + step
+
                 if nxt not in cost_so_far or new_cost < cost_so_far[nxt]:
                     cost_so_far[nxt] = new_cost
                     heapq.heappush(queue, (new_cost + h(nxt, goal), nxt))
