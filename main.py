@@ -229,14 +229,13 @@ def run_deathmatch(screen, clock, num_enemies):
                 elif pw.type == 'life':  player.extra_lives = 1
 
             for enemy in enemies:
-                enemy.update_ai(player.rect, player_bullets, all_walls, dest_walls, enemy_bullets)
+                enemy.update_ai(player.rect,all_walls, dest_walls, enemy_bullets)
 
             player_bullets.update()
             enemy_bullets.update()
             powerups.update()
 
-            status = handle_combat(player, enemies, player_bullets, enemy_bullets,
-                                   dest_walls, indest_walls, all_walls)
+            status = handle_combat(player, enemies, player_bullets, enemy_bullets, dest_walls, indest_walls, all_walls)
             p_dead = (status == "DEAD")
             e_dead = (len(enemies) == 0)
             if p_dead and e_dead:
@@ -256,8 +255,8 @@ def run_deathmatch(screen, clock, num_enemies):
             player.draw_bars(screen)
             for e in enemies: e.draw_bars(screen)
         else:
-            draw_text(screen, res_txt,        FONT_BIG,   400, 300, res_col)
-            draw_text(screen, "R - Powrót",   FONT_SMALL, 400, 380)
+            draw_text(screen, res_txt, FONT_BIG,   400, 300, res_col)
+            draw_text(screen, "R - Powrót", FONT_SMALL, 400, 380)
 
         pygame.display.flip()
         clock.tick(FPS)
