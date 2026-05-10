@@ -2,7 +2,6 @@ import pygame
 import sys
 import random
 import glob
-import os
 from tank import Tank
 from enemy import EnemyTank
 from enemy2 import EnemyTankCP
@@ -99,7 +98,7 @@ SECTOR_CENTERS = [
 CAP_W, CAP_H = 140, 140  # rozmiar strefy przejmowania
 
 def sector_to_rect(sector_idx):
-    # Zwracamy rect strefy wyśrodkowany w danym sektorze
+    #Zwracamy rect strefy wyśrodkowany w danym sektorze
     cx, cy = SECTOR_CENTERS[sector_idx]
     return pygame.Rect(cx - CAP_W // 2, cy - CAP_H // 2, CAP_W, CAP_H)
 
@@ -108,11 +107,11 @@ def opposite_side_spawn(sector_idx, all_walls, existing_tanks):
     col = sector_idx % 3
 
     if col == 0:
-        x_range = (550, 760)   #punkt po lewej, spawn po prawej
+        x_range = (550, 760) #punkt po lewej, spawn po prawej
     elif col == 2:
-        x_range = (40, 250)    #punkt po prawej, spawn po lewej
+        x_range = (40, 250) #punkt po prawej, spawn po lewej
     else:
-        x_range = None         #środkowy sektor, losujemy stronę
+        x_range = None #środkowy sektor, losujemy stronę
 
     for _ in range(80):
         if x_range:
@@ -216,18 +215,11 @@ def run_deathmatch(screen, clock, num_enemies):
                 last_spawn = now
 
             #Obsługa ruchu gracza ze strzałkami i spacji do strzelania
-            keys    = pygame.key.get_pressed()
-            old_pos = player.rect.copy()
+            keys = pygame.key.get_pressed()
             dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
-            dy = keys[pygame.K_DOWN]  - keys[pygame.K_UP]
-            if dx:
-                player.move(dx, 0)
-                if pygame.sprite.spritecollide(player, all_walls, False):
-                    player.rect.x = old_pos.x
-            if dy:
-                player.move(0, dy)
-                if pygame.sprite.spritecollide(player, all_walls, False):
-                    player.rect.y = old_pos.y
+            dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+            player.move(dx, dy, all_walls)
+
             if keys[pygame.K_SPACE]:
                 player.shoot(player_bullets)
 
@@ -288,9 +280,9 @@ def run_capture_point(screen, clock):
 
     #Pierwszy wróg pojawia się od razu po przeciwnej stronie niż punkt
     sx, sy = opposite_side_spawn(current_sector, all_walls, [player])
-    e = EnemyTankCP(sx, sy)
-    enemies.add(e)
-    all_sprites.add(e)
+    first_enemy = EnemyTankCP(sx, sy)
+    enemies.add(first_enemy)
+    all_sprites.add(first_enemy)
 
     progress      = 0.0
     capture_speed = 0.04
@@ -309,7 +301,7 @@ def run_capture_point(screen, clock):
 
     while True:
         screen.fill((20, 20, 20))
-        now       = pygame.time.get_ticks()
+        now = pygame.time.get_ticks()
         time_left = max(0, total_time - (now - start_ticks))
 
         for ev in pygame.event.get():
@@ -330,8 +322,7 @@ def run_capture_point(screen, clock):
                     sector_announce_timer = 120
 
                     #Przy każdej zmianie sektora spawnujemy nowego wroga
-                    sx, sy = opposite_side_spawn(current_sector, all_walls,
-                                                 [player] + list(enemies))
+                    sx, sy = opposite_side_spawn(current_sector, all_walls, [player] + list(enemies))
                     new_e = EnemyTankCP(sx, sy)
                     enemies.add(new_e)
                     all_sprites.add(new_e)
@@ -341,8 +332,7 @@ def run_capture_point(screen, clock):
                 spawn_thresh = int(progress / 15) * 15
                 if spawn_thresh not in spawned_at_pcts:
                     spawned_at_pcts.add(spawn_thresh)
-                    sx, sy = opposite_side_spawn(current_sector, all_walls,
-                                                 [player] + list(enemies))
+                    sx, sy = opposite_side_spawn(current_sector, all_walls, [player] + list(enemies))
                     new_e = EnemyTankCP(sx, sy)
                     enemies.add(new_e)
                     all_sprites.add(new_e)
@@ -354,27 +344,20 @@ def run_capture_point(screen, clock):
 
             #Progress rośnie gdy tylko gracz jest w strefie, maleje gdy tylko wróg
             capture_zone = capture_rect.inflate(4, 4)
-            player_in    = capture_zone.colliderect(player.rect)
-            enemy_in     = any(capture_zone.colliderect(e.rect) for e in enemies)
+            player_in = capture_zone.colliderect(player.rect)
+            enemy_in = any(capture_zone.colliderect(e.rect) for e in enemies)
 
             if player_in and not enemy_in:
                 progress = min(100, progress + capture_speed)
             elif enemy_in and not player_in:
                 progress = max(-100, progress - capture_speed)
 
-            # Ruch gracza
-            keys  = pygame.key.get_pressed()
-            old_p = player.rect.copy()
+            #Ruch gracza
+            keys = pygame.key.get_pressed()
             dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
-            dy = keys[pygame.K_DOWN]  - keys[pygame.K_UP]
-            if dx:
-                player.move(dx, 0)
-                if pygame.sprite.spritecollide(player, all_walls, False):
-                    player.rect.x = old_p.x
-            if dy:
-                player.move(0, dy)
-                if pygame.sprite.spritecollide(player, all_walls, False):
-                    player.rect.y = old_p.y
+            dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+            player.move(dx, dy, all_walls)
+
             if keys[pygame.K_SPACE]:
                 player.shoot(p_bullets)
 
@@ -385,9 +368,8 @@ def run_capture_point(screen, clock):
                     player.extra_lives += 1
                     player.health = 2
 
-            for e in enemies:
-                e.update_ai(capture_rect, player.rect, p_bullets,
-                            all_walls, d_walls, e_bullets)
+            for en in enemies:
+                en.update_ai(capture_rect, player.rect, p_bullets, all_walls, d_walls, e_bullets)
 
             #Rozdzielamy boty które wjechały w siebie
             enemy_list = list(enemies)
@@ -396,22 +378,22 @@ def run_capture_point(screen, clock):
                     if not e1.alive() or not e2.alive():
                         continue
                     if e1.rect.colliderect(e2.rect):
-                        dx = e1.rect.centerx - e2.rect.centerx
-                        dy = e1.rect.centery  - e2.rect.centery
-                        if abs(dx) >= abs(dy):
-                            push = 2 if dx >= 0 else -2
+                        edx = e1.rect.centerx - e2.rect.centerx
+                        edy = e1.rect.centery  - e2.rect.centery
+                        if abs(edx) >= abs(edy):
+                            push = 2 if edx >= 0 else -2
                             e1.rect.x += push
                             e2.rect.x -= push
                         else:
-                            push = 2 if dy >= 0 else -2
+                            push = 2 if edy >= 0 else -2
                             e1.rect.y += push
                             e2.rect.y -= push
                         if pygame.sprite.spritecollideany(e1, all_walls):
-                            e1.rect.x -= push if abs(dx) >= abs(dy) else 0
-                            e1.rect.y -= push if abs(dy)  > abs(dx) else 0
+                            e1.rect.x -= push if abs(edx) >= abs(edy) else 0
+                            e1.rect.y -= push if abs(edy)  > abs(edx) else 0
                         if pygame.sprite.spritecollideany(e2, all_walls):
-                            e2.rect.x += push if abs(dx) >= abs(dy) else 0
-                            e2.rect.y += push if abs(dy)  > abs(dx) else 0
+                            e2.rect.x += push if abs(edx) >= abs(edy) else 0
+                            e2.rect.y += push if abs(edy)  > abs(edx) else 0
 
             p_bullets.update()
             e_bullets.update()

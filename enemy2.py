@@ -205,42 +205,26 @@ class EnemyTankCP(Tank):
 
         return (target_rect.centerx, target_rect.centery)
 
-    def _try_shoot_at_player(self, player_rect, enemy_bullets, indest_walls,
-                              target_rect, all_walls):
+    def _try_shoot_at_player(self, player_rect, enemy_bullets, indest_walls, target_rect, all_walls):
         if self._shoot_cooldown > 0:
             return
 
+        drive_dir = self.direction
         shot_fired = False
-        drive_dir  = self.direction  # zapamiętujemy kierunek jazdy przed strzałem
 
+        #Strzelamy jeśli gracz jest już w linii aktualnego kierunku jazdy
         if self.target_in_front(player_rect, margin=self.SHOOT_MARGIN):
-            #Gracz w linii ognia sprawdzamy czy niezniszczalna ściana nie blokuje
             clear = (indest_walls is None
                      or self.has_clear_line_of_sight(player_rect, indest_walls))
             if clear:
-                shot_fired = self.shoot(enemy_bullets)
-
-        elif pygame.math.Vector2(self.rect.center).distance_to(player_rect.center) < 180:
-            #Gracz blisko obracamy się ku niemu i próbujemy strzelić
-            best = self.get_best_direction(player_rect)
-            self.direction = best
-            self.rotate(best)
-            if self.target_in_front(player_rect, margin=self.SHOOT_MARGIN):
-                clear = (indest_walls is None
-                         or self.has_clear_line_of_sight(player_rect, indest_walls))
-                if clear:
-                    shot_fired = self.shoot(enemy_bullets)
-
-        #Zawsze przywracamy kierunek jazdy po próbie strzału
-        if self.direction != drive_dir:
-            self.direction = drive_dir
-            self.rotate(drive_dir)
+                self.shoot(enemy_bullets)
+                shot_fired = True
 
         if shot_fired:
             self._shoot_cooldown = 22
             new_pos = self._random_pos_in_zone(target_rect, all_walls)
             if new_pos:
-                self._post_shot_target  = new_pos
+                self._post_shot_target = new_pos
                 self._post_shot_timeout = 90
 
     def _random_pos_in_zone(self, target_rect, all_walls):
