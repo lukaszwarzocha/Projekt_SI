@@ -98,5 +98,7 @@ class Tank(pygame.sprite.Sprite):
         if self.get_reload_progress() >= 1.0:
             bx = self.rect.centerx + self.direction[0] * 18
             by = self.rect.centery + self.direction[1] * 18
-            bullet_group.add(Bullet(bx, by, self.direction))
+            is_strong = self.has_strong_shot
+            bullet_group.add(Bullet(bx, by, self.direction, is_strong=is_strong))
+            self.has_strong_shot = False
             self.last_shot = pygame.time.get_ticks()

@@ -24,7 +24,7 @@ class EnemyTankCP(Tank):
         self._wander_target     = None  #punkt docelowy patrolu w strefie
 
     def update_ai(self, target_rect, player_rect, player_bullets,
-                  all_walls, dest_walls, enemy_bullets, indest_walls=None):
+                  all_walls, dest_walls, enemy_bullets, indest_walls=None, powerups=None):
         old_pos = self.rect.copy()
         self._shoot_cooldown    = max(0, self._shoot_cooldown - 1)
         self._post_shot_timeout = max(0, self._post_shot_timeout - 1)
@@ -34,7 +34,7 @@ class EnemyTankCP(Tank):
 
         if not in_point:
             self._drive_to_point(target_rect, player_rect, all_walls,
-                                 dest_walls, enemy_bullets, indest_walls)
+                                 dest_walls, enemy_bullets, indest_walls, powerups)
         else:
             self._patrol_in_point(target_rect, player_rect, all_walls,
                                   enemy_bullets, indest_walls)
@@ -46,11 +46,34 @@ class EnemyTankCP(Tank):
             self._last_goal = None
 
     def _drive_to_point(self, target_rect, player_rect, all_walls,
-        dest_walls, enemy_bullets, indest_walls):
+        dest_walls, enemy_bullets, indest_walls, powerups=None):
+
+        bx, by = self.rect.centerx, self.rect.centery
+
+        # Logika zbierania power-upów w drodze do strefy
+        # Wróg jedzie po power-up zamiast bezpośrednio do strefy, jeżeli najbliższy
+        # power-up znajduje się bliżej (Manhattan) od bota niż środek strefy przejmowania.
+        # Działa to tylko gdy wróg NIE jest jeszcze w strefie (tryb _drive_to_point),
+        # więc nie przerywa już rozpoczętego przejmowania.
+        effective_target = target_rect
+        if powerups:
+            bot_to_point = (abs(bx - target_rect.centerx)
+                            + abs(by - target_rect.centery))
+            best_pu_dist = float('inf')
+            best_pu = None
+            for pw in powerups:
+                d = abs(bx - pw.rect.centerx) + abs(by - pw.rect.centery)
+                if d < best_pu_dist:
+                    best_pu_dist = d
+                    best_pu = pw
+            #Idziemy po power-up tylko jeśli jest realnie bliżej niż strefa
+            if best_pu is not None and best_pu_dist < bot_to_point:
+                effective_target = best_pu.rect.inflate(60, 60)
+
+        goal  = (effective_target.centerx  // 40, effective_target.centery  // 40)
 
         # Przeliczamy pozycje na kafelki do użycia w A*
         start = (self.rect.centerx // 40, self.rect.centery // 40)
-        goal  = (target_rect.centerx  // 40, target_rect.centery  // 40)
 
         dest_coords = frozenset(
             (w.rect.centerx // 40, w.rect.centery // 40) for w in dest_walls
@@ -284,9 +307,13 @@ class EnemyTankCP(Tank):
 
     def _a_star(self, start, goal, indest_walls, dest_walls_coords):
         #Algorytm A* na siatce kafelków koszt zniszczalnej ściany = 6, wolne pole = 1
+        #Heurystyka: odległość Euklidesowa (bardziej dynamiczna niż Manhattan,
+        #bo równomiernie penalizuje ruchy we wszystkich kierunkach i nie
+        #faworyzuje sztucznych 'przekątnych' skoków oceny).
         def h(a, b):
-            return abs(a[0]-b[0]) + abs(a[1]-b[1])  # heurystyka Manhattan
+            return ((a[0]-b[0])**2 + (a[1]-b[1])**2) ** 0.5
 
+        import heapq
         queue = [(0, start)]
         came_from = {start: None}
         cost_so_far = {start: 0}

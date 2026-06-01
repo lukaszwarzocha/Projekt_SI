@@ -26,7 +26,6 @@ class PowerUp(pygame.sprite.Sprite):
         self.image.fill(colors.get(p_type, (200, 200, 200)))
 
     def update(self):
-        #Usuwamy power-up po 15 sekundach jeśli nikt go nie zebrał
         if pygame.time.get_ticks() - self.spawn_time > 15000:
             self.kill()
 
@@ -49,7 +48,6 @@ def draw_text(screen, text, font, x, y, color=(255, 255, 255)):
     screen.blit(img, img.get_rect(center=(x, y)))
 
 def draw_heart(screen, x, y, size, color):
-    #Rysujemy ikonę serca z dwóch kół i trójkąta
     surf = pygame.Surface((size, size), pygame.SRCALPHA)
     r = size // 2
     pygame.draw.circle(surf, color, (r // 2, r // 2), r // 2)
@@ -58,13 +56,11 @@ def draw_heart(screen, x, y, size, color):
     screen.blit(surf, (x, y))
 
 def draw_ui(screen, player):
-    #Pokazujemy serce tylko gdy gracz ma dodatkowe życie
     if player.extra_lives > 0:
         draw_heart(screen, 20, 20, 30, (220, 20, 20))
 
 
 def spawn_powerup(powerups, all_walls):
-    #Maksymalnie 2 power-upy na mapie jednocześnie
     if len(powerups) >= 2:
         return
     for _ in range(15):
@@ -75,7 +71,6 @@ def spawn_powerup(powerups, all_walls):
             break
 
 def get_safe_spawn_point(all_walls, existing_tanks):
-    #Szukamy wolnego miejsca w prawej połowie mapy (dla trybu DM)
     for _ in range(50):
         rx, ry = random.randint(450, 750), random.randint(50, 550)
         temp = pygame.Rect(rx - 20, ry - 20, 40, 40)
@@ -84,33 +79,28 @@ def get_safe_spawn_point(all_walls, existing_tanks):
             return rx, ry
     return 700, 300
 
-#Mapa 800x600 podzielona na siatkę 3x3 (9 sektorów)
 COL_W = SCREEN_WIDTH  // 3
 ROW_H = SCREEN_HEIGHT // 3
 
-#Środki wszystkich 9 sektorów numerowane wierszami od lewej
 SECTOR_CENTERS = [
     (COL_W * c + COL_W // 2, ROW_H * r + ROW_H // 2)
     for r in range(3) for c in range(3)
 ]
 
-CAP_W, CAP_H = 140, 140  # rozmiar strefy przejmowania
+CAP_W, CAP_H = 140, 140
 
 def sector_to_rect(sector_idx):
-    #Zwracamy rect strefy wyśrodkowany w danym sektorze
     cx, cy = SECTOR_CENTERS[sector_idx]
     return pygame.Rect(cx - CAP_W // 2, cy - CAP_H // 2, CAP_W, CAP_H)
 
 def opposite_side_spawn(sector_idx, all_walls, existing_tanks):
-    #Spawnujemy wroga po przeciwnej stronie mapy niż aktualny sektor punktu
     col = sector_idx % 3
-
     if col == 0:
-        x_range = (550, 760) #punkt po lewej, spawn po prawej
+        x_range = (550, 760)
     elif col == 2:
-        x_range = (40, 250) #punkt po prawej, spawn po lewej
+        x_range = (40, 250)
     else:
-        x_range = None #środkowy sektor, losujemy stronę
+        x_range = None
 
     for _ in range(80):
         if x_range:
@@ -131,13 +121,11 @@ def opposite_side_spawn(sector_idx, all_walls, existing_tanks):
 
 
 def handle_combat(player, enemies, player_bullets, enemy_bullets, dest_walls, indest_walls, all_walls):
-    #Pociski są niszczone gdy trafią w ścianę (zniszczalna ściana też ginie)
     pygame.sprite.groupcollide(player_bullets, indest_walls, True, False)
     pygame.sprite.groupcollide(enemy_bullets,  indest_walls, True, False)
     pygame.sprite.groupcollide(player_bullets, dest_walls,   True, True)
     pygame.sprite.groupcollide(enemy_bullets,  dest_walls,   True, True)
 
-    #Kolizja gracza z wrogiem niszczy wroga ale gracz traci HP lub pancerz
     enemy_collided = pygame.sprite.spritecollideany(player, enemies)
     if enemy_collided:
         enemy_collided.kill()
@@ -146,23 +134,25 @@ def handle_combat(player, enemies, player_bullets, enemy_bullets, dest_walls, in
         else:
             player.health = 0
 
-    #Pociski gracza trafiają we wrogów z obrażeniami zależnymi od power-upa
     hits = pygame.sprite.groupcollide(enemies, player_bullets, False, True)
-    for enemy in hits:
-        dmg = 2 if player.has_strong_shot else 1
-        enemy.health -= dmg
-        player.has_strong_shot = False
+    for enemy, bullets in hits.items():
+        for bullet in bullets:
+            dmg = 2 if bullet.is_strong else 1
+            if enemy.has_armor:
+                enemy.has_armor = False
+            else:
+                enemy.health -= dmg
         if enemy.health <= 0:
             enemy.kill()
 
-    #Pociski wrogów trafiają gracza
-    if pygame.sprite.spritecollide(player, enemy_bullets, True):
+    enemy_bullets_hit = pygame.sprite.spritecollide(player, enemy_bullets, True)
+    for bullet in enemy_bullets_hit:
+        dmg = 2 if bullet.is_strong else 1
         if player.has_armor:
             player.has_armor = False
         else:
-            player.health -= 1
+            player.health -= dmg
 
-    #Sprawdzamy czy gracz żyje i obsługujemy dodatkowe życie
     if player.health <= 0:
         if player.extra_lives > 0:
             player.extra_lives = 0
@@ -186,7 +176,6 @@ def run_deathmatch(screen, clock, num_enemies):
     all_sprites.add(player)
     tanks_to_check = [player]
 
-    #Spawnujemy wrogów w prawej połowie mapy
     for _ in range(num_enemies):
         sx, sy = get_safe_spawn_point(all_walls, tanks_to_check)
         e = EnemyTank(sx, sy)
@@ -208,12 +197,11 @@ def run_deathmatch(screen, clock, num_enemies):
                 return
 
         if not game_over:
-            #Power-up pojawia się co 5 sekund
-            if now - last_spawn > 5000:
+            #Power-up pojawia się co 2,5 sekundy (przyspieszony spawn w DM)
+            if now - last_spawn > 2500:
                 spawn_powerup(powerups, all_walls)
                 last_spawn = now
 
-            #Obsługa ruchu gracza ze strzałkami i spacji do strzelania
             keys = pygame.key.get_pressed()
             dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
             dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
@@ -222,14 +210,56 @@ def run_deathmatch(screen, clock, num_enemies):
             if keys[pygame.K_SPACE]:
                 player.shoot(player_bullets)
 
-            #Zbieranie power-upów przez kolizję
             for pw in pygame.sprite.spritecollide(player, powerups, True):
                 if pw.type == 'strong': player.has_strong_shot = True
                 elif pw.type == 'armor': player.has_armor = True
                 elif pw.type == 'life':  player.extra_lives = 1
 
-            for enemy in enemies:
-                enemy.update_ai(player.rect,all_walls, dest_walls, enemy_bullets)
+            for enemy in list(enemies):
+                for pw in pygame.sprite.spritecollide(enemy, powerups, True):
+                    if pw.type == 'strong': enemy.has_strong_shot = True
+                    elif pw.type == 'armor': enemy.has_armor = True
+                    elif pw.type == 'life':
+                        #Jeśli wróg jest ranny – leczymy do pełna, inaczej dodatkowe życie
+                        if enemy.health < enemy.max_health:
+                            enemy.health = enemy.max_health
+                        else:
+                            enemy.extra_lives = 1
+
+            #AI każdego bota dostaje listę pozostałych botów, żeby:
+            #  1) nie wjeżdżać w nich podczas ruchu (prewencja kolizji)
+            #  2) nie strzelać gdy sojusznik stoi w linii ognia (friendly fire)
+            enemy_list = list(enemies)
+            for enemy in enemy_list:
+                others = [e for e in enemy_list if e is not enemy]
+                enemy.update_ai(player.rect, all_walls, dest_walls, enemy_bullets,
+                                list(powerups),
+                                player_bullets=player_bullets,
+                                other_enemies=others)
+
+            #Awaryjne rozdzielanie botów - na wypadek gdyby prewencja zawiodła
+            #(np. po spawnie w pobliżu, po zniszczeniu ściany itp.)
+            for i, e1 in enumerate(enemy_list):
+                for e2 in enemy_list[i+1:]:
+                    if not e1.alive() or not e2.alive():
+                        continue
+                    if e1.rect.colliderect(e2.rect):
+                        edx = e1.rect.centerx - e2.rect.centerx
+                        edy = e1.rect.centery  - e2.rect.centery
+                        if abs(edx) >= abs(edy):
+                            push = 2 if edx >= 0 else -2
+                            e1.rect.x += push
+                            e2.rect.x -= push
+                        else:
+                            push = 2 if edy >= 0 else -2
+                            e1.rect.y += push
+                            e2.rect.y -= push
+                        if pygame.sprite.spritecollideany(e1, all_walls):
+                            e1.rect.x -= push if abs(edx) >= abs(edy) else 0
+                            e1.rect.y -= push if abs(edy)  > abs(edx) else 0
+                        if pygame.sprite.spritecollideany(e2, all_walls):
+                            e2.rect.x += push if abs(edx) >= abs(edy) else 0
+                            e2.rect.y += push if abs(edy)  > abs(edx) else 0
 
             player_bullets.update()
             enemy_bullets.update()
@@ -265,7 +295,6 @@ def run_capture_point(screen, clock):
     path = get_random_map_cp()
     all_walls, d_walls, i_walls = load_map(path, TILE_SIZE)
 
-    #Punkt startuje w sektorze 4 (środek mapy)
     current_sector = 4
     capture_rect   = sector_to_rect(4)
 
@@ -276,7 +305,6 @@ def run_capture_point(screen, clock):
     powerups = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group(all_walls, player)
 
-    #Pierwszy wróg pojawia się od razu po przeciwnej stronie niż punkt
     sx, sy = opposite_side_spawn(current_sector, all_walls, [player])
     first_enemy = EnemyTankCP(sx, sy)
     enemies.add(first_enemy)
@@ -285,7 +313,6 @@ def run_capture_point(screen, clock):
     progress = 0.0
     capture_speed = 0.04
 
-    #Śledzimy które progi zmiany sektora i spawnu już zostały użyte
     used_sector_thresholds = set()
     spawned_at_pcts = set()
 
@@ -295,7 +322,7 @@ def run_capture_point(screen, clock):
 
     game_over = False
     res_txt, res_col = "", (255, 255, 255)
-    sector_announce_timer = 0  #ile klatek zostało do końca animacji zmiany sektora
+    sector_announce_timer = 0
 
     while True:
         screen.fill((20, 20, 20))
@@ -309,7 +336,6 @@ def run_capture_point(screen, clock):
 
         if not game_over:
 
-            #Zmiana sektora co +25% progressu każdy próg wyzwala dokładnie raz
             if abs(progress) >= 25:
                 sect_thresh = int(progress / 25) * 25
                 if sect_thresh != 0 and sect_thresh not in used_sector_thresholds:
@@ -319,13 +345,11 @@ def run_capture_point(screen, clock):
                     capture_rect = sector_to_rect(current_sector)
                     sector_announce_timer = 120
 
-                    #Przy każdej zmianie sektora spawnujemy nowego wroga
                     sx, sy = opposite_side_spawn(current_sector, all_walls, [player] + list(enemies))
                     new_e = EnemyTankCP(sx, sy)
                     enemies.add(new_e)
                     all_sprites.add(new_e)
 
-            #Nowy wróg co 15% postępu gracza zaczynając od 15%
             if progress >= 15:
                 spawn_thresh = int(progress / 15) * 15
                 if spawn_thresh not in spawned_at_pcts:
@@ -335,12 +359,10 @@ def run_capture_point(screen, clock):
                     enemies.add(new_e)
                     all_sprites.add(new_e)
 
-            #Power-up pojawia się co 5 sekund
-            if now - last_pu_spawn > 5000:
+            if now - last_pu_spawn > 4000:
                 spawn_powerup(powerups, all_walls)
                 last_pu_spawn = now
 
-            #Progress rośnie gdy tylko gracz jest w strefie, maleje gdy tylko wróg
             capture_zone = capture_rect.inflate(4, 4)
             player_in = capture_zone.colliderect(player.rect)
             enemy_in = any(capture_zone.colliderect(e.rect) for e in enemies)
@@ -350,7 +372,6 @@ def run_capture_point(screen, clock):
             elif enemy_in and not player_in:
                 progress = max(-100, progress - capture_speed)
 
-            #Ruch gracza
             keys = pygame.key.get_pressed()
             dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
             dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
@@ -366,10 +387,21 @@ def run_capture_point(screen, clock):
                     player.extra_lives += 1
                     player.health = 2
 
-            for en in enemies:
-                en.update_ai(capture_rect, player.rect, p_bullets, all_walls, d_walls, e_bullets)
+            for enemy in list(enemies):
+                for pw in pygame.sprite.spritecollide(enemy, powerups, True):
+                    if pw.type == 'strong': enemy.has_strong_shot = True
+                    elif pw.type == 'armor': enemy.has_armor = True
+                    elif pw.type == 'life':
+                        if enemy.health < enemy.max_health:
+                            enemy.health = enemy.max_health
+                        else:
+                            enemy.extra_lives = 1
 
-            #Rozdzielamy boty które wjechały w siebie
+            for en in enemies:
+                en.update_ai(capture_rect, player.rect, p_bullets, all_walls, d_walls, e_bullets,
+                             indest_walls=i_walls, powerups=list(powerups))
+
+            #Rozdzielamy boty które wjechały w siebie (w CP zostawiamy fallback)
             enemy_list = list(enemies)
             for i, e1 in enumerate(enemy_list):
                 for e2 in enemy_list[i+1:]:
@@ -408,7 +440,6 @@ def run_capture_point(screen, clock):
             elif time_left <= 0:
                 game_over, res_txt, res_col = True, "KONIEC CZASU!", (255, 165, 0)
 
-        #Kolor ramki i komunikat zależą od tego kto przejmuje punkt
         if progress > 0:
             p_col, msg = (0, 255, 0), f"PRZEJMOWANIE: {int(progress)}%"
         elif progress < 0:
@@ -416,13 +447,11 @@ def run_capture_point(screen, clock):
         else:
             p_col, msg = (150, 150, 150), "PUNKT NEUTRALNY"
 
-        #Subtelne linie siatki pokazują podział mapy na sektory
         for r in range(1, 3):
             pygame.draw.line(screen, (40, 40, 60), (0, r * ROW_H), (SCREEN_WIDTH, r * ROW_H), 1)
         for c in range(1, 3):
             pygame.draw.line(screen, (40, 40, 60), (c * COL_W, 0), (c * COL_W, SCREEN_HEIGHT), 1)
 
-        #Strefa miga na żółto przez 2 sekundy po zmianie sektora
         if sector_announce_timer > 0:
             sector_announce_timer -= 1
             color = (255, 255, 0) if (sector_announce_timer // 6) % 2 == 0 else p_col
@@ -444,7 +473,6 @@ def run_capture_point(screen, clock):
         draw_text(screen, f"CZAS: {m:02d}:{s:02d}", FONT_MID,   400, 30)
         draw_text(screen, msg, FONT_SMALL, 400, 75, p_col)
 
-        #Napis pojawia się gdy punkt zmienia lokalizację
         if sector_announce_timer > 0:
             ann_surf = FONT_MID.render("! PUNKT PRZENIESIONY !", True, (255, 255, 0))
             ann_surf.set_alpha(min(255, sector_announce_timer * 3))
@@ -486,7 +514,6 @@ def main():
         elif state == "SETTINGS":
             draw_text(screen, f"WROGOWIE: {enemy_count}", FONT_MID, 400, 250)
 
-            #Suwak wyboru liczby wrogów (1 do 3)
             slider_rect = pygame.Rect(250, 450, 300, 10)
             pygame.draw.rect(screen, (100, 100, 100), slider_rect)
             handle_x = slider_rect.left + (enemy_count - 1) * (slider_rect.width // 2)
