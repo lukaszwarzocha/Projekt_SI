@@ -216,7 +216,6 @@ class EnemyTank(Tank):
 
     def update_ai(self, player_rect, all_walls, dest_walls, enemy_bullets,
                   powerups=None, player_bullets=None, other_enemies=None):
-        old_pos = self.rect.copy()
         self._ally_dodge_timer = max(0, self._ally_dodge_timer - 1)
 
         #Budujemy zbiory kafelków dla obu typów ścian
@@ -280,6 +279,23 @@ class EnemyTank(Tank):
         if d != self.direction:
             self.direction = d
             self.rotate(d)
+
+        #Wyrównanie do środka pasa (anti-stuck) ZANIM ruszymy do przodu: hitbox
+        #czołgu po obrocie ma 34px, a korytarze mają szerokość kafelka (40px).
+        #Bot spawnuje się i porusza poza siatką kafelków, więc nawet kilka pikseli
+        #dryfu w osi prostopadłej do ruchu powoduje, że 34px hitbox wystaje do
+        #sąsiedniego wiersza/kolumny i zahacza o ścianę -> kolizja -> cofnięcie
+        #ruchu i blokada w miejscu. Dociągamy czołg do środka pasa (jak robi to bot
+        #w trybie Capture Point) PRZED ruchem, dzięki czemu mieści się w korytarzu i
+        #może płynnie jechać oraz skręcać na skrzyżowaniach.
+        self._center_in_lane(all_walls)
+
+        #Pozycję bazową do cofania nieudanego ruchu PRZECHWYTUJEMY PO centrowaniu.
+        #Dzięki temu postęp wyrównania do środka pasa NIE jest tracony, gdy ruch do
+        #przodu trafi w ścianę - bot stopniowo zjeżdża na środek korytarza (2px/klatkę)
+        #i po kilku klatkach wystający róg hitboxa przestaje zahaczać o sąsiedni
+        #kafelek, więc bot może ruszyć dalej zamiast blokować się w miejscu.
+        old_pos = self.rect.copy()
 
         self.rect.x += self.direction[0] * self.speed
         self.rect.y += self.direction[1] * self.speed
@@ -399,6 +415,34 @@ class EnemyTank(Tank):
             if (not self._friendly_bullet_in_path(enemy_bullets, player_bullets)
                     and not self._ally_in_line(other_enemies)):
                 self.shoot(enemy_bullets)
+
+    def _center_in_lane(self, all_walls):
+        """Dociąga czołg do środka kafelka w osi prostopadłej do ruchu.
+
+        Ruch poziomy -> wyrównujemy pozycję pionową (środek wiersza),
+        ruch pionowy  -> wyrównujemy pozycję poziomą (środek kolumny).
+        Krok wyrównania jest ograniczony do prędkości czołgu i wycofywany,
+        gdyby miał wepchnąć bota w ścianę.
+        """
+        dirx, diry = self.direction
+        if dirx != 0 and diry == 0:
+            target = (self.rect.centery // TILE) * TILE + TILE // 2
+            diff = target - self.rect.centery
+            if diff:
+                step = max(-self.speed, min(self.speed, diff))
+                saved_y = self.rect.y
+                self.rect.centery += step
+                if pygame.sprite.spritecollideany(self, all_walls):
+                    self.rect.y = saved_y
+        elif diry != 0 and dirx == 0:
+            target = (self.rect.centerx // TILE) * TILE + TILE // 2
+            diff = target - self.rect.centerx
+            if diff:
+                step = max(-self.speed, min(self.speed, diff))
+                saved_x = self.rect.x
+                self.rect.centerx += step
+                if pygame.sprite.spritecollideany(self, all_walls):
+                    self.rect.x = saved_x
 
     def _dir_to(self, target):
         dx = target.centerx - self.rect.centerx
