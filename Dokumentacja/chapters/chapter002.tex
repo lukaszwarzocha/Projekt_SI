@@ -1,0 +1,316 @@
+\chapter{Opis struktury projektu}
+\label{cha:Opis struktury projektu}
+
+\section{Technologie wykorzystane w projekcie}
+
+Projekt został zaimplementowany w Pythonie w~wersji 3.12 z wykorzystaniem biblioteki pygame 2.6.1. 
+Środowiskiem programistycznym był PyCharm Community Edition. Repozytorium kodu jest organizowane w jeden katalog 
+roboczy.
+ 
+Architektura gry opiera się na pętli zdarzeń pygame z zachowaniem stałej liczby klatek (60 FPS). Każda klatka obejmuje:
+\begin{enumerate}
+    \item Obsługę zdarzeń klawiatury (input gracza)
+    \item Aktualizację AI przeciwników
+    \item Aktualizację pozycji pocisków i~detekcję kolizji
+    \item Renderowanie sceny na ekranie
+\end{enumerate}
+
+\section{Struktura plików źródłowych}
+
+Projekt składa się z następujących plików źródłowych:
+ 
+\begin{itemize}
+    \item \texttt{main.py} - punkt wejścia aplikacji; obsługa menu, wybór trybu, pętla gry, 
+    zarządzanie stanami rozgrywki, spawnowanie power-upów i przeciwników
+    \item \texttt{tank.py} - klasa bazowa Tank reprezentująca czołg (gracza lub przeciwnika); 
+    obsługa ruchu, rotacji, strzelania, kolizji, power-upów, systemu zdrowia
+    \item \texttt{enemy.py} - klasa EnemyTank dziedzicząca po Tank; implementacja AI opartej 
+    na Minimax z przycinaniem alfa-beta dla trybu Deathmatch
+    \item \texttt{enemy2.py} - klasa EnemyTankCP dziedzicząca po Tank; implementacja AI opartej 
+    na A* dla trybu Capture Point
+    \item \texttt{bullet.py} - klasa Bullet reprezentująca pocisk; obsługa ruchu, animacji, detekcji wyjścia poza ekran
+    \item \texttt{walls.py} - klasy ścian zniszczalnych Wall oraz niezniszczalnych IndestructibleWall
+    \item \texttt{powerup.py} - klasa PowerUp reprezentująca bonus na mapie (życie, pancerz, silny strzał)
+    \item \texttt{map\_loader.py} - funkcje wczytujące mapy z plików tekstowych .txt z folderów Maps (Deathmatch) i {Maps2} (Capture Point)
+\end{itemize}
+ 
+Mapa jest zapisana w pliku tekstowym każdy znak reprezentuje 
+jeden kafelek 40x40 pikseli, \# to ściana niezniszczalna, X to ściana zniszczalna, spacja to wolne pole. 
+Pozwala to na łatwe dodawanie nowych map bez modyfikacji kodu.
+
+\section{Tryb Deathmatch - algorytm Minimax z przycinaniem alfa-beta}
+\subsection{Idea algorytmu Minimax}
+
+Minimax jest klasycznym algorytmem decyzyjnym przeznaczonym dla gier dwuosobowych z pełną informacją i ruchem naprzemiennym. 
+Algorytm zakłada, że obaj gracze grają optymalnie: jeden (MAX) dąży do maksymalizacji oceny pozycji, drugi (MIN) do jej minimalizacji.
+ 
+Drzewo Minimax o głębokości d reprezentuje sekwencję d kolejnych ruchów. Korzeń drzewa odpowiada 
+bieżącej pozycji, każdy poziom poniżej reprezentuje jeden hipotetyczny ruch, na przemian bota (warstwa MAX) i gracza (warstwa MIN). 
+W liściach drzewa (głębokość 0) wywoływana jest funkcja oceny pozycji $\text{eval}(s)$, której wartość propaguje się w górę 
+drzewa zgodnie z regułą:
+ 
+\begin{equation}
+\text{Minimax}(s) =
+\begin{cases}
+\text{eval}(s) & \text{gdy } d = 0 \\
+\max_{s' \in \text{succ}(s)} \text{Minimax}(s') & \text{gdy gracz to MAX} \\
+\min_{s' \in \text{succ}(s)} \text{Minimax}(s') & \text{gdy gracz to MIN}
+\end{cases}
+\end{equation}
+ 
+W zaimplementowanym projekcie głębokość drzewa wynosi d=4, czyli bot przewiduje dwa swoje ruchy i dwa odpowiedzi gracza. 
+Strategia jest z natury defensywna - bot wybiera ruch, który jest dla niego najlepszy nawet w najgorszym scenariuszu, co eliminuje
+błędy typu 'wskoczę na linię ognia, bo akurat gracz patrzy w drugą stronę'.
+ 
+\subsection{Funkcja oceny pozycji}
+
+Funkcja oceny \_eval składa się z czterech komponentów połączonych liniowo:
+ 
+\begin{equation}
+f(b, p, \text{cost}, \text{pu}) = -2 \cdot d_{Ch}(b, p) + B_{LOS} + B_{PU} - 2 \cdot \text{cost}_\text{acc}
+\end{equation}
+ 
+gdzie:
+ 
+\textbf{Odległość Czebyszewa do gracza} z wagą $-2$:
+\begin{equation}
+d_{Ch}(a, b) = \max(|a_x - b_x|, |a_y - b_y|)
+\end{equation}
+ 
+Dystans Czebyszewa jest lepszą miarą niż odległość Manhattan dla ruchu w siatce 4-kierunkowej, 
+ponieważ uwzględnia naturalne obwiednie ruchów (czołg może poruszać się w osi X i Y niezależnie). 
+Im bliżej gracza, tym wyższa ocena, co motywuje bota do aktywnego ścigania przeciwnika.
+ 
+\textbf{Bonus linii strzału (LOS)} $B_{LOS} = +80$ przyznawany, gdy bot i gracz znajdują się w tej samej osi 
+(z tolerancją 16 pikseli) oraz między nimi nie ma niezniszczalnej ściany blokującej tor pocisku. 
+Jest to bardzo silny sygnał: pozycja umożliwiająca czysty strzał jest mocno premiowana.
+ 
+\textbf{Bonus power-upa} $B_{PU} \in [0, 40]$ przyznawany, gdy gracz jest daleko ($d_{Ch}(b, p) > 120$~px) 
+a najbliższy power-up blisko ($d_{Ch}(b, \text{pu}) < 100$~px). Wartość bonusu skaluje się odwrotnie z 
+odległością: $B_{PU} = \max(0, 40 - d_{Ch}(b, \text{pu})/3)$. Pozwala botowi zbierać użyteczne bonusy w momentach, gdy 
+gonienie gracza nie ma sensu.
+ 
+\textbf{Kara za koszt drogi} $-2 \cdot \text{cost}_\text{acc}$, gdzie $\text{cost}_\text{acc}$ to suma kosztów przejść 
+przez zniszczalne ściany na symulowanej trasie. Każda zniszczalna ściana to koszt $\text{COST\_DEST} = 8$. 
+Komponent ten zniechęca bota do planowania ruchów wymagających niszczenia ścian, jeśli istnieje alternatywna trasa.
+ 
+Dodatkowo, w turze gracza w symulacji uwzględniony jest szczegół: jeśli na danej hipotetycznej 
+pozycji gracz miałby linię strzału do bota, do oceny tej pozycji dodawana jest kara $-60$. 
+Symulacja 'gracz strzela zamiast uciekać' wymusza na Minimaxie aktywne unikanie pozycji wystawiających bota 
+na ostrzał, nie tylko maksymalizację bliskości.
+
+\subsection{Przycinanie alfa-beta}
+
+Przycinanie alfa-beta jest optymalizacją algorytmu Minimax pozwalającą pominąć całe gałęzie drzewa, 
+które nie wpłyną na ostateczną decyzję. Algorytm utrzymuje dwie wartości graniczne:
+ 
+\begin{itemize}
+    \item $\alpha$ - najlepsza (najwyższa) ocena, jaką MAX może już na pewno zagwarantować w przeszukanej części drzewa
+    \item $\beta$ - najlepsza (najniższa) ocena, jaką MIN może już na pewno zagwarantować
+\end{itemize}
+ 
+Gdy w trakcie przeszukiwania zachodzi warunek $\beta \le \alpha$, dalsze rozwijanie tej gałęzi nie ma sensu - jest oczywiste, 
+że rodzic czyli przeciwnik nigdy nie wybierze tej ścieżki, ponieważ jego dotychczasowo poznana opcja jest co najmniej tak dobra 
+jak obecnie analizowana. Przycinanie nie zmienia ostatecznie wybranego ruchu tylko skraca obliczenia.
+ 
+Pełne drzewo Minimax o głębokości d=4 i rozgałęzieniu 4 (cztery możliwe kierunki ruchu) miałoby teoretycznie $4^4 = 256$ liści. 
+Po zastosowaniu przycinania alfa-beta liczba realnie ocenianych węzłów spada do rzędu $\mathcal{O}(b^{d/2})$ 
+(w optymalnym przypadku uporządkowania ruchów), co w praktyce pozwala na uruchamianie Minimax płynnie w czasie rzeczywistym.
+
+\subsection{Implementacja w pliku enemy.py}
+
+Klasa EnemyTank dziedziczy po klasie bazowej Tank i rozszerza ją o logikę decyzyjną opartą 
+na Minimax.
+
+\lstinputlisting[caption= Implementacja Minimax z przycinaniem alfa-beta (fragment z enemy.py), label=minimax]{src/enemy.py}
+ 
+Ze względu na koszt obliczeniowy Minimax (rzędu kilkuset wywołań \_eval na jedno wywołanie \_best\_direction),
+uruchomienie algorytmu w każdej klatce gry powodowałoby spadki wydajności. Zastosowano więc dwie optymalizacje czasowe:
+ 
+\begin{itemize}
+    \item \textbf{Cykl decyzyjny} - Minimax uruchamiany jest co $\text{THINK\_EVERY} = 15$ klatek, a przez pozostałe
+     14 klatek bot kontynuuje ruch w ostatnio wybranym kierunku. Daje to efektywny krok decyzyjny, wystarczająco szybki 
+     dla gracza.
+    \item \textbf{Losowy offset} - każdy bot ma indywidualny losowy offset czasowy (random.randint(0, THINK\_EVERY-1)), 
+    więc boty nie myślą wszystkie w tej samej klatce.
+\end{itemize}
+ 
+Dodatkowo wykryto, żeprzy długiej grze bot może 'utknąć' w patowych konfiguracjach (np. między dwoma ścianami z Minimax'em 
+wskazującym kierunek niemożliwy do zrealizowania). Zaimplementowano detekcję stanu utknięcia: 
+jeśli pozycja bota nie zmieniła się przez 30 klatek, wymuszany jest wybór losowego wolnego kierunku.
+ 
+Po wybraniu nowego kierunku przez Minimax, zanim bot zacznie się w nim poruszać, wykonywane jest tzw. autocentrowanie do osi 
+kafelka prostopadłej do kierunku ruchu: przy skręcie w poziom wyrównywana jest pozycja pionowa Y
+bota do środka kafelka, przy skręcie w pion - pozycja pozioma X. Mechanizm działa z tolerancją 12 pikseli i zapobiega 
+dryfowi między kafelkami, który mógłby spowodować, że bot wjedzie w konfigurację, z której nie da się ruszyć dalej w wybranym kierunku.
+ 
+Niezależnie od powyższego, w sytuacji gdy bot mimo wszystko wjedzie w ścianę, stosowany jest drugi mechanizm awaryjny - snap do 
+środka kafelka po kolizji ze ścianą.
+
+\section{Tryb Capture Point - algorytm A*}
+\subsection{Idea algorytmu A*}
+
+A* jest algorytmem wyszukiwania optymalnej ścieżki w grafie ważonym, łączącym zalety algorytmu Dijkstry 
+(gwarancja optymalności) z heurystycznym przeszukiwaniem 'najlepszy najpierw' (efektywność czasowa).
+ 
+W zaimplementowanym wariancie graf jest dyskretną siatką kafelków 20x15 (300 węzłów), a każdy węzeł jest połączony z czterema 
+sąsiadami (góra, dół, lewo, prawo). Algorytm utrzymuje dwie metryki dla każdego rozważanego węzła n:
+ 
+\begin{itemize}
+    \item $g(n)$ - rzeczywisty koszt dotarcia od~węzła startowego do n
+    \item $h(n)$ - heurystyczny szacunek pozostałego kosztu od n do  celu
+\end{itemize}
+ 
+Priorytet rozwijania węzła to f(n) = g(n) + h(n). Kolejka priorytetowa zwraca zawsze 
+węzeł o najniższym f, dzięki czemu algorytm szybko zbiega do celu, jednocześnie gwarantując optymalność 
+ścieżki pod warunkiem, że heurystyka h jest dopuszczalna (nigdy nie przeszacowuje rzeczywistego kosztu).
+
+\subsection{Heurystyka euklidesowa i wagi przejść kafelków}
+
+Wykorzystaną heurystyką jest dystans euklidesowy:
+ 
+\begin{equation}
+h(a, b) = \sqrt{(a_x - b_x)^2 + (a_y - b_y)^2}
+\end{equation}
+ 
+Euklidesowa odległość po prostej między dwoma punktami nie może być większa niż rzeczywista trasa po siatce 
+4-kierunkowej, ponieważ trasa po siatce zawsze realizuje przemieszczenie w osiach X i Y oddzielnie 
+(sekwencja kroków w poziomie + kroków w pionie), a suma długości boków trójkąta prostokątnego jest co najmniej 
+równa przeciwprostokątnej.
+ 
+Koszt przejścia step cost zależy od typu kafelka:
+ 
+\begin{table}[H]
+    \centering
+    \caption{Wagi przejść kafelków w~algorytmie A\textsuperscript{*}}
+    \label{tab:astar_weights}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        \textbf{Typ kafelka} & \textbf{Koszt} & \textbf{Interpretacja} \\
+        \hline
+        Wolne pole              & 1   & przejście natychmiastowe \\
+        Zniszczalna ściana      & 6   & wymaga rozwalenia (czas + pocisk) \\
+        Niezniszczalna ściana   & $\infty$ & kafelek niedostępny \\
+        \hline
+    \end{tabular}
+\end{table}
+ 
+Wartość 6 dla zniszczalnej ściany jest dobrana z rozmysłem: bot wybierze obejście wolnymi polami, 
+dopóki obejście wymaga mniej niż 6 dodatkowych kafelków. Gdy obejście byłoby znacznie dłuższe, opłaca się rozwalić 
+ścianę. Naturalnie tworzy to zachowanie typu 'rozwalam ścianę tylko, gdy to się opłaca'.
+
+\subsection{Cache'owanie ścieżki i warunki przeliczania}
+
+Algorytm A* nie jest uruchamiany co klatkę - byłoby to zbyt kosztowne i niepotrzebne. 
+Obliczona ścieżka jest przechowywana w polu self.path jako lista współrzędnych kafelków i przeliczana tylko wtedy, gdy:
+ 
+\begin{itemize}
+    \item Zmienił się cel (punkt przeniósł się do innego sektora po przekroczeniu progu 25\% postępu)
+    \item Zmienił się układ niezniszczalnych ścian (zniszczona ściana otwiera nowe trasy)
+    \item Lista ścieżki została wyczerpana (bot dotarł do kolejnego węzła końcowego)
+\end{itemize}
+ 
+Po dotarciu do każdego kafelka ścieżki ten kafelek jest usuwany z self.path, a bot kieruje się 
+do następnego. W ten sposób, mimo iż A* jest kosztowny obliczeniowo, jego średnie obciążenie procesora 
+jestniskie (typowo kilka wywołań na sekundę).
+
+\subsection{Implementacja w pliku enemy2.py}
+
+Listing poniżej przedstawia główną funkcję implementującą algorytm A*.
+
+\lstinputlisting[caption=Implementacja algorytmu A* (fragment z enemy2.py), label=astar]{src/enemy2.py}
+ 
+Strukturą danych przechowującą węzły do rozwinięcia jest kolejka priorytetowa zaimplementowana przez moduł heapq z biblioteki 
+standardowej Pythona. Słownik came\_from zapamiętuje rodzica każdego węzła, co umożliwia rekonstrukcję ścieżki 
+przez cofanie się od węzła docelowego do startowego po zakończeniu przeszukiwania.
+ 
+Zachowanie bota wewnątrz strefy przejmowania nie wykorzystuje już A* - gdy bot dotrze do strefy, losuje losowy 
+punkt patrolu wewnątrz strefy i jedzie do niego. Jeśli gracz również znajduje się w strefie, celem patrolu staje się 
+sam gracz (bot przechodzi w tryb agresywny). Po dotarciu do celu losowany jest nowy punkt, aby bot nie stał w miejscu i nie 
+był łatwym celem.
+ 
+Dodatkowo, gdy bot jest jeszcze w drodze dostrefy (tryb \_drive\_to\_point), uwzględniana jest obecność power-upów 
+na mapie. Jeśli najbliższy power-up znajduje się bliżej bota (w metryce Manhattan) niż środek strefy przejmowania, 
+bot tymczasowo zmienia cel A* naokolicę tego power-upa (jego rect rozszerzony o 60 pikseli w każdą stronę). Pozwala 
+to botowi zbierać bonusy po drodze bez rezygnacji z głównego celu, ale nie przerywa już rozpoczętego przejmowania - logika 
+ta działa wyłącznie poza strefą.
+
+\section{Heurystyki uzupełniające}
+\textbf{Wykrywanie linii strzału}
+
+Wykrywanie linii strzału (Line Of Sight, LOS) wykorzystywane jest w dwóch miejscach algorytmu 
+zróżnymi stopniami restrykcyjności.
+ 
+W funkcji oceny Minimax \_eval sprawdzenie LOS odbywa się przez rzucenie wirtualnego promienia ze stałym
+krokiem STEP=20 pikseli od pozycji bota do pozycji gracza. Promień blokowany jest wyłącznie przez niezniszczalne 
+ściany - zniszczalne traktowane są jak potencjalna 'zasłona dymna' (bot może je rozwalić strzałem, 
+więc obecność takiej ściany nie jest sygnałem braku LOS).
+ 
+Natomiast w rzeczywistej decyzji o oddaniu strzału \_can\_shoot,
+sprawdzenie jest ściślejsze: promień rzucany jest ze mniejszym krokiem 10 pikseli i blokowany przez obie grupy ścian 
+(zniszczalne i niezniszczalne). Logika ta zapobiega marnowaniu pocisków, które rozwaliłyby ścianę, ale nie trafiłyby w gracza.
+
+\textbf{Unikanie friendly fire i marnowania pocisków}
+
+Zaimplementowano dwa mechanizmy zapobiegające bezsensownym strzałom:
+
+\begin{itemize}
+\item Friendly fire avoidance - przed oddaniem strzału bot sprawdza, czy w jego linii ognia nie 
+stoi inny bot (sojusznik). Funkcja \_ally\_in\_line sprawdza wszystkich sojuszników w zasięgu 200 pikseli na osi 
+kierunku ruchu, z tolerancją prostopadłą 22 pikseli (czołg ma 20px szerokości, dodatkowa tolerancja 
+zabezpiecza przed strzałem w bok sojusznika).
+\item Friendly bullet detection - przed oddaniem strzału w zniszczalną ścianę bot sprawdza, czy w tym samym kierunku 
+nie leci już pocisk z innego źródła (innego bota lub gracza). Funkcja \texttt\_friendly\_bullet\_in\_path szuka pocisków 
+o tym samym kierunku w zasięgu 70 pikseli przed botem. Mechanizm ten zapobiega sytuacji, w której bot strzela w ścianę, którą 
+za moment zniszczy już lecący pocisk - jego własny pocisk poleciałby wtedy do końca ekranu w pustą przestrzeń.
+\end{itemize}
+
+\textbf{Zachowanie kolizyjne}
+
+System obsługi kolizji obejmuje dwa nieoczywiste mechanizmy:
+ 
+\begin{itemize}
+\item Snap do~środka kafelka - gdy bot po zniszczalnej kolizji wciąż znajduje się wewnątrz ściany 
+(np. wskutek faktu, że jego hitbox po rotacji ma rozmiar 34x34 pikseli a nie 20x20, pozycja bota jest wyciągana do środka 
+aktualnego kafelka, czyli wielokrotności 40 plus 20). Środek kafelka to jedyny punkt w siatce, w którym 34-pikselowy hitbox 
+ma gwarancję zmieszczenia się w 40-pikselowym kafelku bez stykania się ze ścianami sąsiednich kafelków.
+\item Unik od sojusznika - gdy bot wpadnie na innego bota, cofa się do pozycji sprzed ruchu i wybiera deterministycznie 
+kierunek prostopadły do osi sojusznika (jeśli zderzenie nastąpiło w osi X, ucieka w osi Y, i odwrotnie). Wybór 
+jest deterministyczny, a nie losowy, oraz ma cooldown 20 klatek - bez niego boty wpadające na siebie kręciły się 
+wokół własnej osi co klatkę.
+\end{itemize}
+
+\section{Napotkane problemy i sposoby ich rozwiązania}
+
+W trakcie implementacji projektu napotkano i rozwiązano szereg problemów. Najważniejsze z nich opisano poniżej.
+ 
+\textbf{Problem 2: Boty utykały w ścianach po rotacji.} 
+
+W pliku tank.py obraz czołgu base\_image jest tworzony 
+jako powierzchnia 34x34 piksele - musi pomieścić korpus 22x22, gąsienice wystające po bokach oraz lufę wystającą ku górze. 
+Jednocześnie w konstruktorze klasy Tank hitbox kolizyjny self.rect jest jawnie ustawiony na 20x20 pikseli. 
+Problem pojawia się przy pierwszym wywołaniu metody rotate, która zastępuje hitbox bounding-boxem obrazu: 
+self.rect = self.image.get\_rect(...). W efekcie hitbox bota po pierwszym obrocie urasta do 34x34 pikseli 
+(rozmiaru obrazu) i nie wraca już do pierwotnego rozmiaru. W konsekwencji bot mógł wjechać w konfigurację, 
+z której nie dało się wyjść standardowym snapem do rogu kafelka, ponieważ 34-pikselowy hitbox w rogu zawsze styka się 
+ze ścianami sąsiednich kafelków. 
+
+Rozwiązanie: snap do środka kafelka (współrzędne typu 20 + 40k), a nie do rogu - tylko środek kafelka gwarantuje, 
+że 34-pikselowy hitbox zmieści się w 40-pikselowym kafelku bez stykania się ze ścianami sąsiednich kafelków (margines 
+3 piksele z każdej strony).
+ 
+\textbf{Problem 3: Boty kręciły się wokół własnej osi.} 
+
+Bot wykonywał obrót lufy do gracza w każdej klatce, w której Minimax 
+nie był uruchamiany (przez 14 klatek z 15-klatkowego cyklu), niezależnie od tego, czy reload pocisku był gotowy. 
+Powodowało to migotanie wizualne i obrazanie się bota. 
+
+Rozwiązanie: rotacja lufy wykonywana tylko, gdy get\_reload\_progress() >= 1.0 (czyli pocisk jest gotowy do strzału).
+ 
+\textbf{Problem 5: Boty wpadające na~siebie kręciły się.} 
+
+Gdy bot zderzył się z innym botem, każda kolejna klatka kolizji wybierała losowy nowy kierunek z listy preferowanych. 
+Skutkiem był efekt nieskończonej rotacji bez rzeczywistego ruchu. 
+
+Rozwiązanie: deterministyczny wybór kierunku (zawsze ten sam dla danego ustawienia botów) plus cooldown 20 klatek 
+przed kolejną zmianą kierunku.

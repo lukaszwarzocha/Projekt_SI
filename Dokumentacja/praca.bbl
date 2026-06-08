@@ -1,0 +1,39 @@
+\begin{thebibliography}{1}
+
+\bibitem{example2024}
+Title of the webpage, 2024.
+\newblock Accessed: 2024-09-16.
+
+\bibitem{ARM06}
+Ada Europe.
+\newblock {\em Ada Reference Manual {ISO}/{IEC} 8652:200y({E}) {E}d. 3}, 2006.
+
+\bibitem{BuDo03}
+A.~Burns and B.~Dobbing.
+\newblock The {R}avenscar {P}rofile for real--time and high integrity systems.
+\newblock {\em Cross{T}alk}, 16(11):9--12, 2003.
+
+\bibitem{BuDoVa03}
+A.~Burns, B.~Dobbing, and T.~Vardanega.
+\newblock Guide for the use of the ada ravenscar profile in high integrity
+  systems.
+\newblock Technical Report YCS-2003-348, University of York, 2003.
+
+\bibitem{Dil00}
+A.~Diller.
+\newblock {\em LaTeX wiersz po wierszu}.
+\newblock Wydawnictwo Helion, Gliwice, 2000.
+
+\bibitem{Lam92}
+L.~Lamport.
+\newblock {\em LaTeX system przygotowywania dokumentów}.
+\newblock Wydawnictwo Ariel, Kraków, 1992.
+
+\bibitem{PeDa04}
+J.~Peleska, D.~Große, A.~E. Haxthausen, and R.~Drechsler.
+\newblock Automated verification for train control systems.
+\newblock In {\em Proc. of the 5th Symposium on Formal Methods for Automation
+  and Safety in Railway and Automotive Systems (FORMS/FORMAT 2004)}, pages
+  252--265, Braunschweig, Germany, December 2004.
+
+\end{thebibliography}

@@ -1,0 +1,47 @@
+\chapter{Podsumowanie}
+\label{cha:Podsumowanie}
+
+\section{Wnioski z realizacji projektu}
+
+W ramach projektu zaimplementowano dwa klasyczne algorytmy sztucznej inteligencji w kontekście praktycznym - jako logikę 
+decyzyjną przeciwników w grze komputerowej czasu rzeczywistego. Oba algorytmy działają poprawnie, generują wiarygodne 
+zachowanie i stanowią mierzalne wyzwanie dla gracza.
+ 
+\textbf{Co udało się osiągnąć:}
+\begin{itemize}
+    \item Implementację algorytmu Minimax z przycinaniem alfa-beta na głębokość 4 z zaadaptowaną funkcją oceny 
+    pozycji uwzględniającą cztery komponenty (Czebyszew, LOS, power-up, koszt drogi)
+    \item Implementację algorytmu A* z heurystyką euklidesową i różnicowymi wagami przejść kafelków
+    \item Rozwiązanie kilku nietrywialnych problemów inżynierskich (snap do kafelka po rotacji 34x34, unikanie 
+    friendly fire, unik od~sojusznika, optymalizacja THINK\_EVERY)
+    \item Bogaty system power-upów wpływający zarówno na gracza, jak i na bota
+    \item Dwa odmienne tryby rozgrywki o różnych celach, prezentujące dwie odmienne klasy algorytmów SI
+\end{itemize}
+ 
+\textbf{Wnioski algorytmiczne:}
+\begin{itemize}
+    \item Algorytm Minimax z przycinaniem alfa-beta sprawdza się w grze czasu rzeczywistego nawet przy głębokości 4, 
+    pod warunkiem cyklicznego uruchamiania (THINK\_EVERY=15). Pełne przeszukiwanie na każdą klatkę nie jest konieczne ani efektywne.
+    \item Wybór heurystyki jest kluczowy. Wartość -2 przy odległości Czebyszewa, +80 za LOS, oraz -60 za symulowany 
+    strzał gracza - te konkretne liczby powstały po serii testów, w których obserwowano zachowanie bota i regulowano wagi. 
+    Wartości zbyt agresywne sprawiały, że bot nieostrożnie rzucał się na gracza; zbyt defensywne sprawiały, że bot uciekał gdy 
+    mógł zaatakować.
+    \item A* z heurystyką euklidesową, mimo iż teoretycznie mniej informatywny niż Manhattan dla siatki 4-kierunkowej, działa 
+    poprawnie i efektywnie w małej siatce 20x15.
+\end{itemize}
+
+\section{Możliwości rozszerzenia projektu}
+
+Projekt w obecnej formie stanowi kompletny prototyp, jednak istnieje szereg kierunków, w których można go rozwinąć:
+ 
+\begin{itemize}
+    \item \textbf{Multiplayer sieciowy} - gra dwuosobowa przez sieć, z zachowaniem AI jako trzeciego/czwartego gracza.
+    \item \textbf{Reinforcement Learning} - zastąpienie heurystycznej funkcji oceny modelem uczonym. 
+    Pozwoliłoby to na AI nauczone "doświadczeniem" grania, niezależne od~ręcznie dobranych wag.
+    \item \textbf{Większe i bardziej zróżnicowane mapy} - obecny rozmiar 20x15 kafelków jest stosunkowo mały. 
+    Większe mapy uwydatniłyby różnice między algorytmami i potencjalnie wymagałyby głębszego Minimax.
+    \item \textbf{Statystyki rozgrywki} - śledzenie wyników, najlepszych czasów, eliminacji - pozwoliłoby na bardziej ilościową 
+    ocenę skuteczności AI.
+    \item \textbf{Więcej typów wrogów} - różne klasy botów z różnymi parametrami (szybkością, częstością strzału, agresywnością) 
+    lub różnymi algorytmami decyzyjnymi.
+\end{itemize}

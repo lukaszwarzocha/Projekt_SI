@@ -1,0 +1,56 @@
+\chapter{Opis założeń projektu}
+\label{cha:Opis założeń projektu}
+
+\section{Cel projektu}
+
+Głównym celem projektu była praktyczna implementacja dwóch klasycznych algorytmów sztucznej inteligencji. 
+Wybrane algorytmy - Minimax z przycinaniem alfa-beta oraz A*. Ich zastosowanie poza laboratoryjnymi warunkami 
+szachownicy wymaga rozwiązania szeregu problemów: ograniczeń czasowych, zachowań kolizyjnych, synchronizacji 
+wielu agentów oraz balansowania między optymalnością decyzji a kosztem obliczeniowym.
+ 
+Aby zapewnić, że oba algorytmy będą prezentowane w odmiennym kontekście, gra została zaprojektowana z dwoma niezależnymi 
+trybami rozgrywki. W trybie Deathmatch przeciwnik wykorzystuje algorytm Minimax do podejmowania decyzji o ruchu w konfrontacji 
+z graczem, natomiast w trybie Capture Point korzysta z algorytmu A* do wyznaczenia ścieżki do 
+dynamicznie zmieniającej się strefy przejmowania.
+ 
+Dodatkowym celem było zaprojektowanie systemu, w którym oba algorytmy współpracują z heurystykami uzupełniającymi 
+(wykrywanie linii strzału, unikanie friendly fire, obsługa kolizji), tworząc wiarygodne zachowanie przeciwnika.
+
+\section{Założenia technologiczne}
+
+Projekt zrealizowano w języku Python z wykorzystaniem biblioteki pygame, która stanowi silnik graficzny i zdarzeniowy gry. 
+Wybór języka podyktowany został jego przejrzystą składnią matematyczną (kluczową przy implementacji algorytmów SI).
+ 
+Pełna lista wykorzystanych bibliotek obejmuje:
+
+\begin{itemize}
+    \item \texttt{pygame} - silnik gry (okno, renderowanie, kolizje, klawiatura, dźwięk)
+    \item \texttt{random} - losowanie map, pozycji spawnu, typów power-upów oraz wyborów AI
+    \item \texttt{heapq} - kolejka priorytetowa wykorzystywana w algorytmie A*
+    \item \texttt{glob} - wyszukiwanie plików map w folderach Maps/ i Maps2/
+\end{itemize}
+ 
+Mapa gry ma stałe wymiary 800x600 pikseli i jest podzielona na siatkę kafelków 20x15 o rozmiarze 40x40 pikseli każdy. 
+Czołg gracza ma hitbox 20x20 pikseli i porusza się z prędkością 2,7 piksela na klatkę, natomiast czołgi przeciwników 
+poruszają się wolniej - z prędkością 2 piksele na klatkę. Różnica jest celowa: daje graczowi 
+przewagę manewrową, kompensując fakt, że każdy bot zna całą mapę i planuje optymalnie.
+
+\section{Wykorzystanie AI w przygotowywaniu projektu}
+
+W trakcie realizacji projektu korzystano z modelu językowego (Claude) w następujących obszarach:
+ 
+\begin{itemize}
+    \item \textbf{Wsparcie przy implementacji} - konsultacja struktury klas, generowanie szablonów funkcji pomocniczych.
+    \item \textbf{Debugowanie} - diagnoza nietrywialnych błędów, m.in. botów ,,kręcących się'' wokół własnej osi 
+    (problem wynikał z rotacji lufy co klatkę przed właściwym strzałem) oraz strzałów przelatujących przez zniszczalne ściany.
+    \item \textbf{Refaktoryzacja kodu} - restrukturyzacja funkcji \_minimax celem lepszej czytelności i weryfikowalności 
+    poprawności algorytmu.
+\end{itemize}
+ 
+Każdy wygenerowany przez AI fragment kodu został zweryfikowany poprzez 
+(uruchamianie gry i obserwacja zachowania AI w różnych sytuacjach) oraz analizę logiczną 
+Żadne dane zewnętrzne nie były wykorzystane w projekcie.
+ 
+W projekcie nie wykorzystano generatywnej AI do tworzenia grafik, animacji ani plansz, 
+wszystkie elementy graficzne (czołg, pocisk, power-upy, ściany) są prostymi figurami geometrycznymi renderowanymi przez
+pygame bezpośrednio z~kodu.
