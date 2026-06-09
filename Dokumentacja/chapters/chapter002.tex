@@ -3,7 +3,7 @@
 
 \section{Technologie wykorzystane w projekcie}
 
-Projekt został zaimplementowany w Pythonie w~wersji 3.12 z wykorzystaniem biblioteki pygame 2.6.1. 
+Projekt został zaimplementowany w Pythonie w wersji 3.12 z wykorzystaniem biblioteki pygame 2.6.1. 
 Środowiskiem programistycznym był PyCharm Community Edition. Repozytorium kodu jest organizowane w jeden katalog 
 roboczy.
  
@@ -11,7 +11,7 @@ Architektura gry opiera się na pętli zdarzeń pygame z zachowaniem stałej lic
 \begin{enumerate}
     \item Obsługę zdarzeń klawiatury (input gracza)
     \item Aktualizację AI przeciwników
-    \item Aktualizację pozycji pocisków i~detekcję kolizji
+    \item Aktualizację pozycji pocisków i detekcję kolizji
     \item Renderowanie sceny na ekranie
 \end{enumerate}
 
@@ -85,8 +85,8 @@ Im bliżej gracza, tym wyższa ocena, co motywuje bota do aktywnego ścigania pr
 (z tolerancją 16 pikseli) oraz między nimi nie ma niezniszczalnej ściany blokującej tor pocisku. 
 Jest to bardzo silny sygnał: pozycja umożliwiająca czysty strzał jest mocno premiowana.
  
-\textbf{Bonus power-upa} $B_{PU} \in [0, 40]$ przyznawany, gdy gracz jest daleko ($d_{Ch}(b, p) > 120$~px) 
-a najbliższy power-up blisko ($d_{Ch}(b, \text{pu}) < 100$~px). Wartość bonusu skaluje się odwrotnie z 
+\textbf{Bonus power-upa} $B_{PU} \in [0, 40]$ przyznawany, gdy gracz jest daleko ($d_{Ch}(b, p) > 120$ px) 
+a najbliższy power-up blisko ($d_{Ch}(b, \text{pu}) < 100$ px). Wartość bonusu skaluje się odwrotnie z 
 odległością: $B_{PU} = \max(0, 40 - d_{Ch}(b, \text{pu})/3)$. Pozwala botowi zbierać użyteczne bonusy w momentach, gdy 
 gonienie gracza nie ma sensu.
  
@@ -144,8 +144,8 @@ kafelka prostopadłej do kierunku ruchu: przy skręcie w poziom wyrównywana jes
 bota do środka kafelka, przy skręcie w pion - pozycja pozioma X. Mechanizm działa z tolerancją 12 pikseli i zapobiega 
 dryfowi między kafelkami, który mógłby spowodować, że bot wjedzie w konfigurację, z której nie da się ruszyć dalej w wybranym kierunku.
  
-Niezależnie od powyższego, w sytuacji gdy bot mimo wszystko wjedzie w ścianę, stosowany jest drugi mechanizm awaryjny - snap do 
-środka kafelka po kolizji ze ścianą.
+Niezależnie od powyższego, w sytuacji gdy bot mimo wszystko wjedzie w ścianę, stosowany jest drugi mechanizm awaryjny - nagła 
+zmiana czołgu do środka kafelka po kolizji ze ścianą.
 
 \section{Tryb Capture Point - algorytm A*}
 \subsection{Idea algorytmu A*}
@@ -157,7 +157,7 @@ W zaimplementowanym wariancie graf jest dyskretną siatką kafelków 20x15 (300 
 sąsiadami (góra, dół, lewo, prawo). Algorytm utrzymuje dwie metryki dla każdego rozważanego węzła n:
  
 \begin{itemize}
-    \item $g(n)$ - rzeczywisty koszt dotarcia od~węzła startowego do n
+    \item $g(n)$ - rzeczywisty koszt dotarcia od węzła startowego do n
     \item $h(n)$ - heurystyczny szacunek pozostałego kosztu od n do  celu
 \end{itemize}
  
@@ -182,7 +182,7 @@ Koszt przejścia step cost zależy od typu kafelka:
  
 \begin{table}[H]
     \centering
-    \caption{Wagi przejść kafelków w~algorytmie A\textsuperscript{*}}
+    \caption{Wagi przejść kafelków w algorytmie A\textsuperscript{*}}
     \label{tab:astar_weights}
     \begin{tabular}{|l|c|l|}
         \hline
@@ -196,7 +196,7 @@ Koszt przejścia step cost zależy od typu kafelka:
 \end{table}
  
 Wartość 6 dla zniszczalnej ściany jest dobrana z rozmysłem: bot wybierze obejście wolnymi polami, 
-dopóki obejście wymaga mniej niż 6 dodatkowych kafelków. Gdy obejście byłoby znacznie dłuższe, opłaca się rozwalić 
+dopóki obejście wymaga mniej niż 6 dodatkowych kafelków. Gdy obejście byłoby znacznie dłuższe, opłaca się zniszczyć 
 ścianę. Naturalnie tworzy to zachowanie typu 'rozwalam ścianę tylko, gdy to się opłaca'.
 
 \subsection{Cache'owanie ścieżki i warunki przeliczania}
@@ -243,7 +243,7 @@ zróżnymi stopniami restrykcyjności.
  
 W funkcji oceny Minimax \_eval sprawdzenie LOS odbywa się przez rzucenie wirtualnego promienia ze stałym
 krokiem STEP=20 pikseli od pozycji bota do pozycji gracza. Promień blokowany jest wyłącznie przez niezniszczalne 
-ściany - zniszczalne traktowane są jak potencjalna 'zasłona dymna' (bot może je rozwalić strzałem, 
+ściany - zniszczalne traktowane są jak potencjalna 'zasłona dymna' (bot może je zniszczyć strzałem, 
 więc obecność takiej ściany nie jest sygnałem braku LOS).
  
 Natomiast w rzeczywistej decyzji o oddaniu strzału \_can\_shoot,
@@ -270,7 +270,7 @@ za moment zniszczy już lecący pocisk - jego własny pocisk poleciałby wtedy d
 System obsługi kolizji obejmuje dwa nieoczywiste mechanizmy:
  
 \begin{itemize}
-\item Snap do~środka kafelka - gdy bot po zniszczalnej kolizji wciąż znajduje się wewnątrz ściany 
+\item Rotacja czołgu do środka kafelka - gdy bot po zniszczalnej kolizji wciąż znajduje się wewnątrz ściany 
 (np. wskutek faktu, że jego hitbox po rotacji ma rozmiar 34x34 pikseli a nie 20x20, pozycja bota jest wyciągana do środka 
 aktualnego kafelka, czyli wielokrotności 40 plus 20). Środek kafelka to jedyny punkt w siatce, w którym 34-pikselowy hitbox 
 ma gwarancję zmieszczenia się w 40-pikselowym kafelku bez stykania się ze ścianami sąsiednich kafelków.
@@ -292,10 +292,10 @@ Jednocześnie w konstruktorze klasy Tank hitbox kolizyjny self.rect jest jawnie 
 Problem pojawia się przy pierwszym wywołaniu metody rotate, która zastępuje hitbox bounding-boxem obrazu: 
 self.rect = self.image.get\_rect(...). W efekcie hitbox bota po pierwszym obrocie urasta do 34x34 pikseli 
 (rozmiaru obrazu) i nie wraca już do pierwotnego rozmiaru. W konsekwencji bot mógł wjechać w konfigurację, 
-z której nie dało się wyjść standardowym snapem do rogu kafelka, ponieważ 34-pikselowy hitbox w rogu zawsze styka się 
+z której nie dało się wyjść, ponieważ 34-pikselowy hitbox w rogu zawsze styka się 
 ze ścianami sąsiednich kafelków. 
 
-Rozwiązanie: snap do środka kafelka (współrzędne typu 20 + 40k), a nie do rogu - tylko środek kafelka gwarantuje, 
+Rozwiązanie: Rotacja czołgu do środka kafelka (współrzędne typu 20 + 40k), a nie do rogu - tylko środek kafelka gwarantuje, 
 że 34-pikselowy hitbox zmieści się w 40-pikselowym kafelku bez stykania się ze ścianami sąsiednich kafelków (margines 
 3 piksele z każdej strony).
  
@@ -307,7 +307,7 @@ Powodowało to migotanie wizualne i obrazanie się bota.
 
 Rozwiązanie: rotacja lufy wykonywana tylko, gdy get\_reload\_progress() >= 1.0 (czyli pocisk jest gotowy do strzału).
  
-\textbf{Problem 5: Boty wpadające na~siebie kręciły się.} 
+\textbf{Problem 5: Boty wpadające na siebie kręciły się.} 
 
 Gdy bot zderzył się z innym botem, każda kolejna klatka kolizji wybierała losowy nowy kierunek z listy preferowanych. 
 Skutkiem był efekt nieskończonej rotacji bez rzeczywistego ruchu. 

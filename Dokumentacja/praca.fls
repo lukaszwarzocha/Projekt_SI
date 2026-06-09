@@ -1,6 +1,6 @@
-PWD c:\Users\Admin\Desktop\DokumentacjaSI\DokumentacjaSI
+PWD c:\Users\Admin\PycharmProjects\Projekt_SI\Dokumentacja
 INPUT C:\Users\Admin\AppData\Local\MiKTeX\miktex\data\le\pdftex\pdflatex.fmt
-INPUT c:\Users\Admin\Desktop\DokumentacjaSI\DokumentacjaSI\praca.tex
+INPUT c:\Users\Admin\PycharmProjects\Projekt_SI\Dokumentacja\praca.tex
 OUTPUT praca.log
 INPUT .\urdpl.cls
 INPUT urdpl.cls

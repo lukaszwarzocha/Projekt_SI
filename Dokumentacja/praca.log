@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.28)  8 JUN 2026 18:05
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.28)  9 JUN 2026 12:16
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**c:/Users/Admin/Desktop/DokumentacjaSI/DokumentacjaSI/praca.tex
-(c:/Users/Admin/Desktop/DokumentacjaSI/DokumentacjaSI/praca.tex
+**c:/Users/Admin/PycharmProjects/Projekt_SI/Dokumentacja/praca.tex
+(c:/Users/Admin/PycharmProjects/Projekt_SI/Dokumentacja/praca.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
 (urdpl.cls *** [urdpl.cls] --- (ZG, EZ) v1.0 <19.09.2024> ***
@@ -901,14 +901,14 @@ Package rerunfilecheck Info: File `praca.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  23525 strings out of 467691
- 438250 string characters out of 5432303
+ 438310 string characters out of 5432303
  1044641 words of memory out of 5000000
  52062 multiletter control sequences out of 15000+600000
  699781 words of font info for 110 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 88i,13n,94p,595b,2667s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 88i,13n,94p,597b,2667s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <D:/Latex/fonts/type1/public/amsfonts/cm/cmex10.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmmi10.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmmi7.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmr10.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmr7.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmsy10.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmsy5.pfb><D:/Latex/fonts/type1/public/amsfonts/cm/cmsy7.pfb><D:/Latex/fonts/type1/urw/courier/ucrr8a.pfb><D:/Latex/fonts/type1/urw/helvetic/uhvb8a.pfb><D:/Latex/fonts/type1/urw/helvetic/uhvr8a.pfb><D:/Latex/fonts/type1/urw/helvetic/uhvro8a.pfb><D:/Latex/fonts/type1/urw/times/utmb8a.pfb><D:/Latex/fonts/type1/urw/times/utmr8a.pfb><D:/Latex/fonts/type1/urw/times/utmr8a.pfb><D:/Latex/fonts/type1/urw/times/utmri8a.pfb>
-Output written on praca.pdf (23 pages, 392318 bytes).
+Output written on praca.pdf (23 pages, 392315 bytes).
 PDF statistics:
  475 PDF objects out of 1000 (max. 8388607)
  138 named destinations out of 1000 (max. 500000)

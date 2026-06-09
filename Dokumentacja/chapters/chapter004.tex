@@ -12,8 +12,8 @@ zachowanie i stanowią mierzalne wyzwanie dla gracza.
     \item Implementację algorytmu Minimax z przycinaniem alfa-beta na głębokość 4 z zaadaptowaną funkcją oceny 
     pozycji uwzględniającą cztery komponenty (Czebyszew, LOS, power-up, koszt drogi)
     \item Implementację algorytmu A* z heurystyką euklidesową i różnicowymi wagami przejść kafelków
-    \item Rozwiązanie kilku nietrywialnych problemów inżynierskich (snap do kafelka po rotacji 34x34, unikanie 
-    friendly fire, unik od~sojusznika, optymalizacja THINK\_EVERY)
+    \item Rozwiązanie kilku nietrywialnych problemów inżynierskich (nagła zmiana czołgu do kafelka po rotacji 34x34, unikanie 
+    friendly fire, unik od sojusznika, optymalizacja THINK\_EVERY)
     \item Bogaty system power-upów wpływający zarówno na gracza, jak i na bota
     \item Dwa odmienne tryby rozgrywki o różnych celach, prezentujące dwie odmienne klasy algorytmów SI
 \end{itemize}
@@ -37,7 +37,7 @@ Projekt w obecnej formie stanowi kompletny prototyp, jednak istnieje szereg kier
 \begin{itemize}
     \item \textbf{Multiplayer sieciowy} - gra dwuosobowa przez sieć, z zachowaniem AI jako trzeciego/czwartego gracza.
     \item \textbf{Reinforcement Learning} - zastąpienie heurystycznej funkcji oceny modelem uczonym. 
-    Pozwoliłoby to na AI nauczone "doświadczeniem" grania, niezależne od~ręcznie dobranych wag.
+    Pozwoliłoby to na AI nauczone "doświadczeniem" grania, niezależne od ręcznie dobranych wag.
     \item \textbf{Większe i bardziej zróżnicowane mapy} - obecny rozmiar 20x15 kafelków jest stosunkowo mały. 
     Większe mapy uwydatniłyby różnice między algorytmami i potencjalnie wymagałyby głębszego Minimax.
     \item \textbf{Statystyki rozgrywki} - śledzenie wyników, najlepszych czasów, eliminacji - pozwoliłoby na bardziej ilościową 
