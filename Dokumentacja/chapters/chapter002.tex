@@ -189,7 +189,7 @@ Koszt przejścia step cost zależy od typu kafelka:
         \textbf{Typ kafelka} & \textbf{Koszt} & \textbf{Interpretacja} \\
         \hline
         Wolne pole              & 1   & przejście natychmiastowe \\
-        Zniszczalna ściana      & 6   & wymaga rozwalenia (czas + pocisk) \\
+        Zniszczalna ściana      & 6   & wymaga zniszczenia (czas + pocisk) \\
         Niezniszczalna ściana   & $\infty$ & kafelek niedostępny \\
         \hline
     \end{tabular}
@@ -197,7 +197,7 @@ Koszt przejścia step cost zależy od typu kafelka:
  
 Wartość 6 dla zniszczalnej ściany jest dobrana z rozmysłem: bot wybierze obejście wolnymi polami, 
 dopóki obejście wymaga mniej niż 6 dodatkowych kafelków. Gdy obejście byłoby znacznie dłuższe, opłaca się zniszczyć 
-ścianę. Naturalnie tworzy to zachowanie typu 'rozwalam ścianę tylko, gdy to się opłaca'.
+ścianę. Naturalnie tworzy to zachowanie typu 'Niszcze ściany tylko, gdy to się opłaca'.
 
 \subsection{Cache'owanie ścieżki i warunki przeliczania}
 
@@ -248,7 +248,7 @@ więc obecność takiej ściany nie jest sygnałem braku LOS).
  
 Natomiast w rzeczywistej decyzji o oddaniu strzału \_can\_shoot,
 sprawdzenie jest ściślejsze: promień rzucany jest ze mniejszym krokiem 10 pikseli i blokowany przez obie grupy ścian 
-(zniszczalne i niezniszczalne). Logika ta zapobiega marnowaniu pocisków, które rozwaliłyby ścianę, ale nie trafiłyby w gracza.
+(zniszczalne i niezniszczalne). Logika ta zapobiega marnowaniu pocisków, które zniszczyłyby  ścianę, ale nie trafiłyby w gracza.
 
 \textbf{Unikanie friendly fire i marnowania pocisków}
 
