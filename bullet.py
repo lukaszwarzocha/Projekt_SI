@@ -5,7 +5,7 @@ class Bullet(pygame.sprite.Sprite):
         super().__init__()
 
         self.is_strong = is_strong
-        #Pocisk to mały żółty kwadrat 10x10 (czerwony/pomarańczowy jeśli silny)
+        #Pocisk
         self.image = pygame.Surface((10, 10))
         if is_strong:
             self.image.fill((255, 50, 0))

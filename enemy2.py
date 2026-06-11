@@ -13,7 +13,7 @@ class EnemyTankCP(Tank):
         #Dane ścieżki A*
         self.path         = []
         self._last_goal   = None
-        self._last_indest = None  # cache niezniszczalnych ścian
+        self._last_indest = None
 
         self.idle_timer     = 0
         self.idle_dir_timer = 0
@@ -21,7 +21,7 @@ class EnemyTankCP(Tank):
         self._shoot_cooldown    = 0
         self._post_shot_target  = None
         self._post_shot_timeout = 0
-        self._wander_target     = None  #punkt docelowy patrolu w strefie
+        self._wander_target     = None
 
     def update_ai(self, target_rect, player_rect, player_bullets,
                   all_walls, dest_walls, enemy_bullets, indest_walls=None, powerups=None):
@@ -53,7 +53,7 @@ class EnemyTankCP(Tank):
         # Logika zbierania power-upów w drodze do strefy
         # Wróg jedzie po power-up zamiast bezpośrednio do strefy, jeżeli najbliższy
         # power-up znajduje się bliżej (Manhattan) od bota niż środek strefy przejmowania.
-        # Działa to tylko gdy wróg NIE jest jeszcze w strefie (tryb _drive_to_point),
+        # Działa to tylko gdy wróg NIE jest jeszcze w strefie,
         # więc nie przerywa już rozpoczętego przejmowania.
         effective_target = target_rect
         if powerups:
@@ -212,7 +212,7 @@ class EnemyTankCP(Tank):
         if player_rect is not None:
             return (player_rect.centerx, player_rect.centery)
 
-        #Losujemy punkt wewnątrz strefy z marginesem od krawędzi
+        #Losujemy punkt wewnątrz strefy
         margin = 15
         x_min = target_rect.left  + margin
         x_max = target_rect.right  - margin
@@ -307,9 +307,9 @@ class EnemyTankCP(Tank):
 
     def _a_star(self, start, goal, indest_walls, dest_walls_coords):
         #Algorytm A* na siatce kafelków koszt zniszczalnej ściany = 6, wolne pole = 1
-        #Heurystyka: odległość Euklidesowa (bardziej dynamiczna niż Manhattan,
-        #bo równomiernie penalizuje ruchy we wszystkich kierunkach i nie
-        #faworyzuje sztucznych 'przekątnych' skoków oceny).
+        #Heurystyka: odległość Euklidesowa,
+        #równomiernie zwiększa koszt ruchów we wszystkich kierunkach i nie
+        #faworyzuje sztucznych przekątnych skoków oceny.
         def h(a, b):
             return ((a[0]-b[0])**2 + (a[1]-b[1])**2) ** 0.5
 

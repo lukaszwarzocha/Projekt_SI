@@ -227,8 +227,8 @@ def run_deathmatch(screen, clock, num_enemies):
                             enemy.extra_lives = 1
 
             #AI każdego bota dostaje listę pozostałych botów, żeby:
-            #  1) nie wjeżdżać w nich podczas ruchu (prewencja kolizji)
-            #  2) nie strzelać gdy sojusznik stoi w linii ognia (friendly fire)
+            #  1) nie wjeżdżać w nich podczas ruchu
+            #  2) nie strzelać gdy sojusznik stoi w linii ognia
             enemy_list = list(enemies)
             for enemy in enemy_list:
                 others = [e for e in enemy_list if e is not enemy]
@@ -401,7 +401,7 @@ def run_capture_point(screen, clock):
                 en.update_ai(capture_rect, player.rect, p_bullets, all_walls, d_walls, e_bullets,
                              indest_walls=i_walls, powerups=list(powerups))
 
-            #Rozdzielamy boty które wjechały w siebie (w CP zostawiamy fallback)
+            #Rozdzielamy boty które wjechały w siebie
             enemy_list = list(enemies)
             for i, e1 in enumerate(enemy_list):
                 for e2 in enemy_list[i+1:]:

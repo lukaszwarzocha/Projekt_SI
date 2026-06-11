@@ -4,9 +4,9 @@ class PowerUp(pygame.sprite.Sprite):
     def __init__(self, x, y, p_type):
         super().__init__()
         self.type = p_type
-        self.spawn_time = pygame.time.get_ticks()  #zapamiętujemy czas pojawienia się
+        self.spawn_time = pygame.time.get_ticks()
 
-        #Każdy typ power-upu ma inny kolor żeby gracz wiedział co zbiera
+        #Power-upy
         colors = {
             'strong': (255, 0, 0),  # czerwony silny strzał
             'armor':  (0, 0, 255),  # niebieski tymczasowy pancerz
@@ -18,6 +18,5 @@ class PowerUp(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x, y))
 
     def update(self):
-        #Power-up znika automatycznie po 15 sekundach jeśli nikt go nie zbierze
         if pygame.time.get_ticks() - self.spawn_time > 15000:
             self.kill()

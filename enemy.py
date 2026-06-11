@@ -11,17 +11,15 @@ DEPTH = 4  # głębokość drzewa Minimax
 COST_DEST = 8  # koszt przejścia przez zniszczalną ścianę
 
 
-# --- Pomocnicze heurystyki ---
+#Pomocnicze heurystyki
 
 def _chebyshev(ax, ay, bx, by):
-    """Dystans Czebyszewa - lepsza miara dla ruchu 4-kierunkowego
-    niż Manhattan, bo uwzględnia 'obwiednie' ruchów."""
+    """Dystans Czebyszewa"""
     return max(abs(ax - bx), abs(ay - by))
 
 
 def _has_los(ax, ay, bx, by, indest_fs):
-    """Sprawdza czy między A i B nie ma niezniszczalnej ściany
-    (tzw. Line Of Sight) idąc po prostej z krokiem STEP."""
+    """Sprawdza czy między A i B nie ma niezniszczalnej ściany idąc po prostej z krokiem STEP."""
     dx = bx - ax
     dy = by - ay
     steps = max(abs(dx), abs(dy)) // STEP
@@ -39,8 +37,6 @@ def _has_los(ax, ay, bx, by, indest_fs):
 def _eval(bx, by, px, py, indest_fs, powerups, cost_acc):
     """
     Heurystyka oceniająca stan gry.
-
-    Komponenty:
     - Odległość Czebyszewa do gracza (im bliżej tym lepiej dla bota)
     - Bonus za LOS do gracza (bot ma czysty strzał = warto być blisko)
     - Kara za koszt drogi (kolizje ze zniszczalnymi ścianami)
@@ -214,14 +210,14 @@ class EnemyTank(Tank):
         self._last_pos = (x, y)
         self.reload_time += random.randint(-150, 150)
         self._go_for_powerup = False
-        self._ally_dodge_timer = 0  # cooldown na zmianę kierunku przez sojusznika
+        self._ally_dodge_timer = 0
 
     def update_ai(self, player_rect, all_walls, dest_walls, enemy_bullets,
                   powerups=None, player_bullets=None, other_enemies=None):
         old_pos = self.rect.copy()
         self._ally_dodge_timer = max(0, self._ally_dodge_timer - 1)
 
-        # Budujemy zbiory kafelków dla obu typów ścian
+
         dest_fs = frozenset(
             (w.rect.centerx // TILE, w.rect.centery // TILE)
             for w in dest_walls
@@ -277,7 +273,6 @@ class EnemyTank(Tank):
             if new_dir is not None:
                 self._move_dir = new_dir
 
-                # === AUTOCENTROWANIE DO OSI KAFELKA ===
                 # Wyliczamy środek kafelka na siatce, na którym obecnie stoi bot
                 tx = (self.rect.centerx // TILE) * TILE + TILE // 2
                 ty = (self.rect.centery // TILE) * TILE + TILE // 2
@@ -314,7 +309,6 @@ class EnemyTank(Tank):
 
             # Sprawdzamy czy old_pos nie jest wewnątrz ściany
             if pygame.sprite.spritecollideany(self, all_walls):
-                # Snap do ŚRODKA kafelka (środki: 20, 60, 100, ...)
                 tcol = self.rect.centerx // TILE
                 trow = self.rect.centery // TILE
                 tx = int(tcol * TILE + TILE // 2)

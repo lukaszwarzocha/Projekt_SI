@@ -2,7 +2,6 @@ import pygame
 from walls import DestructibleWall, IndestructibleWall
 
 def load_map(filename, tile_size=40):
-    #Tworzymy trzy grupy: wszystkie ściany, tylko zniszczalne, tylko niezniszczalne
     walls = pygame.sprite.Group()
     dest_walls = pygame.sprite.Group()
     indest_walls = pygame.sprite.Group()
